@@ -1,0 +1,47 @@
+# ========================
+# Node / npm
+# ========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================
+# Next.js / React
+# ========================
+.next/
+out/
+build/
+dist/
+
+# ========================
+# Environment variables
+# ========================
+.env
+.env.local
+.env.development
+.env.production
+
+# ========================
+# Logs
+# ========================
+logs/
+*.log
+
+# ========================
+# OS / Editor
+# ========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ========================
+# Test / Coverage
+# ========================
+coverage/
+
+# ========================
+# TypeScript
+# ========================
+*.tsbuildinfo
