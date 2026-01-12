@@ -24,3 +24,21 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Hide Next.js Dev Indicators */
+[data-nextjs-toast],
+[data-nextjs-scroll-restoration-toast],
+nextjs-portal,
+#next-route-announcer {
+  display: none !important;
+}
+
+/* Specific targeted removal based on user request */
+/* This targets the specific SVG path usually found in the indicator */
+svg:has(path[class="paused"]) {
+  display: none !important;
+}
+
+div:has(> svg > path[class="paused"]) {
+  display: none !important;
+}
