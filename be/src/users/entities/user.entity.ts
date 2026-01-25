@@ -23,6 +23,9 @@ export class User {
     @Column({ nullable: true })
     address: string;
 
+    @Column({ default: 'user' })
+    role: string;
+
     @Column({ default: true })
     is_active: boolean;
 
