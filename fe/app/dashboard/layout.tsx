@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 
 const menuItems = [
     {
-        name: 'Dashboard',
+        name: 'Bảng điều khiển',
         href: '/dashboard',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -15,7 +15,7 @@ const menuItems = [
         ),
     },
     {
-        name: 'Employees',
+        name: 'Nhân viên',
         href: '/dashboard/employees',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -24,7 +24,7 @@ const menuItems = [
         ),
     },
     {
-        name: 'Departments',
+        name: 'Phòng ban',
         href: '/dashboard/departments',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,7 +33,7 @@ const menuItems = [
         ),
     },
     {
-        name: 'Timekeeping',
+        name: 'Chấm công',
         href: '/dashboard/timekeeping',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +42,7 @@ const menuItems = [
         ),
     },
     {
-        name: 'Salary',
+        name: 'Lương',
         href: '/dashboard/salary',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +51,7 @@ const menuItems = [
         ),
     },
     {
-        name: 'Statistics',
+        name: 'Thống kê',
         href: '/dashboard/statistics',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,7 +60,7 @@ const menuItems = [
         ),
     },
     {
-        name: 'Accounts',
+        name: 'Tài khoản',
         href: '/dashboard/accounts',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,7 +84,7 @@ export default function DashboardLayout({
             <div className="w-64 bg-white dark:bg-zinc-800 border-r border-gray-200 dark:border-zinc-700 flex flex-col transition-all duration-300">
                 <div className="h-16 flex items-center justify-center border-b border-gray-200 dark:border-zinc-700">
                     <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">
-                        HRM System
+                        Hệ thống QLNS
                     </h1>
                 </div>
 
@@ -118,7 +118,7 @@ export default function DashboardLayout({
                             AD
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">Admin User</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">Người dùng Admin</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">admin@company.com</p>
                         </div>
                         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,7 +132,7 @@ export default function DashboardLayout({
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 <header className="h-16 bg-white dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700 flex items-center justify-between px-6">
                     <h2 className="text-lg font-semibold text-gray-800 dark:text-white capitalize">
-                        {pathname === '/dashboard' ? 'Overview' : pathname.split('/').pop()?.replace(/-/g, ' ')}
+                        {pathname === '/dashboard' ? 'Tổng quan' : pathname.split('/').pop()?.replace(/-/g, ' ')}
                     </h2>
                     <div className="flex items-center gap-4">
                         <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors">

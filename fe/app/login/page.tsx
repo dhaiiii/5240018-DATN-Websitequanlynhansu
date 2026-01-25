@@ -51,8 +51,7 @@ export default function LoginPage() {
 
             <div className="z-10 w-full max-w-md p-8 bg-white/95 backdrop-blur-lg border border-white rounded-2xl shadow-2xl">
                 <div className="text-center mb-10">
-                    <h1 className="text-4xl font-bold text-blue-600 mb-2 tracking-tight">LOGIN</h1>
-                    <p className="text-blue-500 text-sm">Sign in to access your HRM System</p>
+                    <h1 className="text-4xl font-bold text-blue-600 mb-2 tracking-tight">ĐĂNG NHẬP</h1>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -76,7 +75,7 @@ export default function LoginPage() {
 
                     <div className="space-y-2">
                         <label htmlFor="email" className="text-sm font-medium text-blue-600 ml-1">
-                            Email Address
+                            Địa chỉ Email
                         </label>
                         <div className="relative group">
                             <input
@@ -86,14 +85,14 @@ export default function LoginPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
                                 className="w-full px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 group-hover:bg-blue-100"
-                                placeholder="name@company.com"
+                                placeholder="ten@congty.com"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-2">
                         <label htmlFor="password" className="text-sm font-medium text-blue-600 ml-1">
-                            Password
+                            Mật khẩu
                         </label>
                         <div className="relative group">
                             <input
@@ -108,7 +107,7 @@ export default function LoginPage() {
                         </div>
                         <div className="flex justify-end">
                             <a href="#" className="text-xs text-blue-500 hover:text-blue-700 transition-colors">
-                                Forgot password?
+                                Quên mật khẩu?
                             </a>
                         </div>
                     </div>
@@ -124,15 +123,15 @@ export default function LoginPage() {
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                         ) : (
-                            'Sign In'
+                            'Đăng nhập'
                         )}
                     </button>
                 </form>
 
                 <div className="mt-8 text-center text-sm text-blue-500">
-                    Don't have an account?{' '}
+                    Chưa có tài khoản?{' '}
                     <a href="#" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
-                        Contact Admin
+                        Liên hệ với Admin
                     </a>
                 </div>
             </div>
