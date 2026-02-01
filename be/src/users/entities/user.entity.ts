@@ -23,6 +23,9 @@ export class User {
     @Column({ nullable: true })
     address: string;
 
+    @Column({ nullable: true })
+    avatar: string;
+
     @Column({ default: 'user' })
     role: string;
 
