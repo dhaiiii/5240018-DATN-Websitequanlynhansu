@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { DepartmentsModule } from './departments/departments.module';
 
 @Module({
   imports: [
@@ -16,11 +17,13 @@ import { AuthModule } from './auth/auth.module';
       password: '1',
       database: 'hrmsystem',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
       synchronize: true,
     }),
     RolesModule,
     UsersModule,
     AuthModule,
+    DepartmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

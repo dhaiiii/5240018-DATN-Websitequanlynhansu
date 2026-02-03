@@ -81,8 +81,8 @@ export default function DepartmentsPage() {
             setDepartments(departments.map(dept => dept.id === selectedDepartment.id ? { ...dept, ...formData } as Department : dept));
         } else {
             const newDepartment: Department = {
+                ...(formData as Department),
                 id: Math.max(...departments.map(d => d.id), 0) + 1,
-                ...formData as Department,
             };
             setDepartments([...departments, newDepartment]);
         }
@@ -133,9 +133,9 @@ export default function DepartmentsPage() {
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{dept.name}</h3>
                             </div>
                         </div>
-                        
+
                         <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{dept.description}</p>
-                        
+
                         <div className="space-y-2 mb-4 pb-4 border-b border-gray-200 dark:border-zinc-700">
                             <p className="text-sm text-gray-700 dark:text-gray-300">
                                 <span className="font-medium">Trưởng phòng:</span> {dept.manager}

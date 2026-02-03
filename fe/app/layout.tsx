@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "Hệ thống quản lý nhân sự toàn diện",
 };
 
+import AntdRegistry from "@/lib/AntdRegistry";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,7 +29,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AntdRegistry>{children}</AntdRegistry>
       </body>
     </html>
   );

@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Department } from '../../departments/entities/department.entity';
 
 @Entity('users')
 export class User {
@@ -26,11 +27,17 @@ export class User {
     @Column({ nullable: true })
     avatar: string;
 
+    @Column({ type: 'enum', enum: ['Nam', 'Nữ', 'Khác'], default: 'Nam' })
+    gender: string;
+
     @Column({ default: 'user' })
     role: string;
 
     @Column({ default: true })
     is_active: boolean;
+
+    @ManyToOne(() => Department, (department) => department.users, { nullable: true })
+    department: Department;
 
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     created_at: Date;

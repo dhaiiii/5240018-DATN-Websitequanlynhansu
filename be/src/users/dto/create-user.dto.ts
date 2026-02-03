@@ -6,6 +6,7 @@ export class CreateUserDto {
     phone?: string;
     avatar?: string;
     address?: string;
+    gender?: 'Nam' | 'Nữ' | 'Khác';
     is_active?: boolean;
     role?: string;
 }
