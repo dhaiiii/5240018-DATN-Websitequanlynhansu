@@ -19,20 +19,25 @@ export class DepartmentsService {
 
     async findAll() {
         return this.departmentRepository.createQueryBuilder('department')
-            .loadRelationCountAndMap('department.employee_count', 'department.users')
+            .leftJoin('department.users', 'user', 'user.is_active = :isActive', { isActive: true })
+            .loadRelationCountAndMap('department.employee_count', 'department.users', 'activeUser', (qb) => qb.andWhere('activeUser.is_active = :isActive', { isActive: true }))
             .getMany();
     }
 
     async findOne(id: number) {
         const department = await this.departmentRepository.createQueryBuilder('department')
+            .leftJoinAndSelect('department.users', 'user', 'user.is_active = :isActive', { isActive: true })
             .where('department.id = :id', { id })
-            .loadRelationCountAndMap('department.employee_count', 'department.users')
             .getOne();
 
         if (!department) {
             throw new NotFoundException(`Department with ID ${id} not found`);
         }
-        return department;
+
+        return {
+            ...department,
+            employee_count: department.users?.length || 0
+        };
     }
 
     async update(id: number, updateDepartmentDto: UpdateDepartmentDto) {

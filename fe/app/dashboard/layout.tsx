@@ -15,6 +15,7 @@ import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
     DownOutlined,
+    IdcardOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -34,6 +35,11 @@ const menuItems = [
         key: '/dashboard/departments',
         icon: <TeamOutlined />,
         label: <Link href="/dashboard/departments">Phòng ban</Link>,
+    },
+    {
+        key: '/dashboard/roles',
+        icon: <IdcardOutlined />,
+        label: <Link href="/dashboard/roles">Chức vụ</Link>,
     },
     {
         key: '/dashboard/timekeeping',

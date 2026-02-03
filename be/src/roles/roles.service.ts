@@ -17,16 +17,26 @@ export class RolesService {
         return await this.rolesRepository.save(role);
     }
 
-    async findAll(): Promise<Role[]> {
-        return await this.rolesRepository.find();
+    async findAll(): Promise<any[]> {
+        return await this.rolesRepository.createQueryBuilder('role')
+            .loadRelationCountAndMap('role.employee_count', 'role.users', 'activeUser', (qb) => qb.andWhere('activeUser.is_active = :isActive', { isActive: true }))
+            .getMany();
     }
 
-    async findOne(id: number): Promise<Role> {
-        const role = await this.rolesRepository.findOne({ where: { id } });
+    async findOne(id: number): Promise<any> {
+        const role = await this.rolesRepository.createQueryBuilder('role')
+            .leftJoinAndSelect('role.users', 'user', 'user.is_active = :isActive', { isActive: true })
+            .where('role.id = :id', { id })
+            .getOne();
+
         if (!role) {
             throw new NotFoundException(`Role with ID ${id} not found`);
         }
-        return role;
+
+        return {
+            ...role,
+            employee_count: role.users?.length || 0
+        };
     }
 
     async update(id: number, updateRoleDto: UpdateRoleDto): Promise<Role> {

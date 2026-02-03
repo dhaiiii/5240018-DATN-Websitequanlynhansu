@@ -28,6 +28,16 @@ import type { ColumnsType } from 'antd/es/table';
 const { Title } = Typography;
 const { Option } = Select;
 
+interface Department {
+    id: number;
+    name: string;
+}
+
+interface Role {
+    id: number;
+    role_name: string;
+}
+
 interface Employee {
     id: number;
     employeeCode: string;
@@ -38,52 +48,73 @@ interface Employee {
     phone: string;
     address: string;
     avatar?: string;
-    department: string;
+    department?: Department;
+    role_item?: Role;
     position: string;
     status: string;
     password?: string;
 }
 
 const API_URL = 'http://localhost:3001/api/users';
+const DEPT_API_URL = 'http://localhost:3001/api/departments';
+const ROLE_API_URL = 'http://localhost:3001/api/roles';
 
 export default function EmployeesPage() {
     const [employees, setEmployees] = useState<Employee[]>([]);
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+    const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
     const [searchText, setSearchText] = useState('');
     const [form] = Form.useForm();
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
-    const fetchEmployees = async () => {
+    const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await fetch(API_URL);
-            if (!res.ok) throw new Error('Failed to fetch');
-            const data = await res.json();
-            const mappedData = data.map((u: any) => ({
+            const [usersRes, deptsRes, rolesRes] = await Promise.all([
+                fetch(API_URL),
+                fetch(DEPT_API_URL),
+                fetch(ROLE_API_URL)
+            ]);
+
+            if (!usersRes.ok || !deptsRes.ok || !rolesRes.ok) throw new Error('Failed to fetch data');
+
+            const [users, depts, rolesList] = await Promise.all([
+                usersRes.json(),
+                deptsRes.json(),
+                rolesRes.json()
+            ]);
+
+            const mappedData = users.map((u: any) => ({
                 id: u.id,
                 employeeCode: `NV${u.id.toString().padStart(3, '0')}`,
                 fullName: `${u.first_name} ${u.last_name}`,
                 email: u.email,
-                position: u.role || 'Nhân viên',
-                department: 'Chưa phân loại',
+                position: u.role_item?.role_name || u.role || 'Nhân viên',
+                department: u.department,
+                role_item: u.role_item,
                 status: u.is_active ? 'Đang làm việc' : 'Đã nghỉ',
                 phone: u.phone,
                 avatar: u.avatar,
                 gender: u.gender || 'Nam',
+                address: u.address,
             }));
+
             setEmployees(mappedData);
+            setDepartments(depts);
+            setRoles(rolesList);
         } catch (error) {
             console.error(error);
-            message.error('Không thể tải danh sách nhân viên');
+            message.error('Không thể tải dữ liệu');
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchEmployees();
+        fetchData();
     }, []);
 
     const handleAdd = () => {
@@ -93,16 +124,19 @@ export default function EmployeesPage() {
         form.setFieldsValue({
             status: 'Đang làm việc',
             gender: 'Nam',
-            position: 'Nhân viên',
             password: 'Mac@12345'
         });
         setIsModalOpen(true);
     };
 
-    const handleEdit = (record: Employee) => {
+    const handleEdit = (record: any) => {
         setEditingEmployee(record);
         setAvatarPreview(record.avatar || null);
-        form.setFieldsValue({ ...record });
+        form.setFieldsValue({
+            ...record,
+            departmentId: record.department?.id,
+            roleId: record.role_item?.id
+        });
         setIsModalOpen(true);
     };
 
@@ -111,7 +145,7 @@ export default function EmployeesPage() {
             const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 message.success('Xóa nhân viên thành công');
-                fetchEmployees();
+                fetchData();
             } else {
                 message.error('Xóa thất bại');
             }
@@ -129,9 +163,10 @@ export default function EmployeesPage() {
             phone: values.phone,
             address: values.address,
             avatar: avatarPreview,
-            role: values.position,
             gender: values.gender,
             is_active: values.status === 'Đang làm việc',
+            departmentId: values.departmentId,
+            roleId: values.roleId,
         };
 
         try {
@@ -153,7 +188,7 @@ export default function EmployeesPage() {
             if (res.ok) {
                 message.success(editingEmployee ? 'Cập nhật thành công' : 'Thêm mới thành công');
                 setIsModalOpen(false);
-                fetchEmployees();
+                fetchData();
             } else {
                 message.error('Có lỗi xảy ra khi lưu dữ liệu');
             }
@@ -195,9 +230,14 @@ export default function EmployeesPage() {
             key: 'email',
         },
         {
+            title: 'Phòng ban',
+            key: 'department',
+            render: (_, record) => record.department?.name || 'Chưa phân loại',
+        },
+        {
             title: 'Chức vụ',
-            dataIndex: 'position',
             key: 'position',
+            render: (_, record) => record.role_item?.role_name || record.position || 'Chưa xác định',
         },
         {
             title: 'Trạng thái',
@@ -307,13 +347,6 @@ export default function EmployeesPage() {
                         </Form.Item>
 
                         <Form.Item
-                            name="employeeCode"
-                            label="Mã nhân viên"
-                        >
-                            <Input placeholder="Tự động tạo nếu để trống" disabled />
-                        </Form.Item>
-
-                        <Form.Item
                             name="email"
                             label="Email"
                             rules={[
@@ -339,22 +372,19 @@ export default function EmployeesPage() {
                             </Select>
                         </Form.Item>
 
-                        <Form.Item name="department" label="Phòng ban">
+                        <Form.Item name="departmentId" label="Phòng ban">
                             <Select placeholder="Chọn phòng ban">
-                                <Option value="Phòng IT">Phòng IT</Option>
-                                <Option value="Phòng Kinh doanh">Phòng Kinh doanh</Option>
-                                <Option value="Phòng Nhân sự">Phòng Nhân sự</Option>
-                                <Option value="Phòng Kế toán">Phòng Kế toán</Option>
+                                {departments.map(dept => (
+                                    <Option key={dept.id} value={dept.id}>{dept.name}</Option>
+                                ))}
                             </Select>
                         </Form.Item>
 
-                        <Form.Item name="position" label="Chức vụ">
-                            <Select>
-                                <Option value="Trưởng phòng">Trưởng phòng</Option>
-                                <Option value="Phó phòng">Phó phòng</Option>
-                                <Option value="Chuyên viên">Chuyên viên</Option>
-                                <Option value="Nhân viên">Nhân viên</Option>
-                                <Option value="Thực tập sinh">Thực tập sinh</Option>
+                        <Form.Item name="roleId" label="Chức vụ" rules={[{ required: true, message: 'Vui lòng chọn chức vụ' }]}>
+                            <Select placeholder="Chọn chức vụ">
+                                {roles.map(role => (
+                                    <Option key={role.id} value={role.id}>{role.role_name}</Option>
+                                ))}
                             </Select>
                         </Form.Item>
 

@@ -9,4 +9,6 @@ export class CreateUserDto {
     gender?: 'Nam' | 'Nữ' | 'Khác';
     is_active?: boolean;
     role?: string;
+    departmentId?: number;
+    roleId?: number;
 }

@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { Department } from '../../departments/entities/department.entity';
+import { Role as RoleEntity } from '../../roles/entities/role.entity';
 
 @Entity('users')
 export class User {
@@ -37,7 +38,10 @@ export class User {
     is_active: boolean;
 
     @ManyToOne(() => Department, (department) => department.users, { nullable: true })
-    department: Department;
+    department: Department | null;
+
+    @ManyToOne(() => RoleEntity, (role) => role.users, { nullable: true })
+    role_item: RoleEntity | null;
 
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     created_at: Date;

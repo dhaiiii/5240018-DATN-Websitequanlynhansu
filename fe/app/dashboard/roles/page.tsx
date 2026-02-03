@@ -23,61 +23,60 @@ import {
     DeleteOutlined,
     TeamOutlined,
     EyeOutlined,
-    UserOutlined
+    UserOutlined,
+    IdcardOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title, Text } = Typography;
 
-interface Department {
+interface Role {
     id: number;
-    name: string;
+    role_name: string;
     description: string;
-    manager: string;
     employee_count: number;
-    phone: string;
     users?: any[];
 }
 
-const API_URL = 'http://localhost:3001/api/departments';
+const API_URL = 'http://localhost:3001/api/roles';
 
-export default function DepartmentsPage() {
-    const [departments, setDepartments] = useState<Department[]>([]);
+export default function RolesPage() {
+    const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
-    const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
-    const [viewingDepartment, setViewingDepartment] = useState<Department | null>(null);
+    const [editingRole, setEditingRole] = useState<Role | null>(null);
+    const [viewingRole, setViewingRole] = useState<Role | null>(null);
     const [searchText, setSearchText] = useState('');
     const [form] = Form.useForm();
 
-    const fetchDepartments = async () => {
+    const fetchRoles = async () => {
         setLoading(true);
         try {
             const res = await fetch(API_URL);
             if (!res.ok) throw new Error('Failed to fetch');
             const data = await res.json();
-            setDepartments(data);
+            setRoles(data);
         } catch (error) {
             console.error(error);
-            message.error('Không thể tải danh sách phòng ban');
+            message.error('Không thể tải danh sách chức vụ');
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchDepartments();
+        fetchRoles();
     }, []);
 
     const handleAdd = () => {
-        setEditingDepartment(null);
+        setEditingRole(null);
         form.resetFields();
         setIsModalOpen(true);
     };
 
-    const handleEdit = (record: Department) => {
-        setEditingDepartment(record);
+    const handleEdit = (record: Role) => {
+        setEditingRole(record);
         form.setFieldsValue({ ...record });
         setIsModalOpen(true);
     };
@@ -88,10 +87,10 @@ export default function DepartmentsPage() {
             const res = await fetch(`${API_URL}/${id}`);
             if (!res.ok) throw new Error('Failed to fetch details');
             const data = await res.json();
-            setViewingDepartment(data);
+            setViewingRole(data);
             setIsViewOpen(true);
         } catch (error) {
-            message.error('Không thể tải chi tiết phòng ban');
+            message.error('Không thể tải chi tiết chức vụ');
         } finally {
             setLoading(false);
         }
@@ -101,8 +100,8 @@ export default function DepartmentsPage() {
         try {
             const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
             if (res.ok) {
-                message.success('Xóa phòng ban thành công');
-                fetchDepartments();
+                message.success('Xóa chức vụ thành công');
+                fetchRoles();
             } else {
                 message.error('Xóa thất bại');
             }
@@ -114,8 +113,8 @@ export default function DepartmentsPage() {
     const onFinish = async (values: any) => {
         try {
             let res;
-            if (editingDepartment) {
-                res = await fetch(`${API_URL}/${editingDepartment.id}`, {
+            if (editingRole) {
+                res = await fetch(`${API_URL}/${editingRole.id}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(values),
@@ -129,39 +128,41 @@ export default function DepartmentsPage() {
             }
 
             if (res.ok) {
-                message.success(editingDepartment ? 'Cập nhật thành công' : 'Thêm mới thành công');
+                message.success(editingRole ? 'Cập nhật thành công' : 'Thêm mới thành công');
                 setIsModalOpen(false);
-                fetchDepartments();
+                fetchRoles();
             } else {
-                message.error('Có lỗi xảy ra khi lưu dữ liệu');
+                const err = await res.json();
+                message.error(err.message || 'Có lỗi xảy ra');
             }
         } catch (error) {
             message.error('Lỗi kết nối server');
         }
     };
 
-    const columns: ColumnsType<Department> = [
+    const columns: ColumnsType<Role> = [
         {
-            title: 'Tên phòng ban',
-            dataIndex: 'name',
-            key: 'name',
-            render: (text) => <span className="font-semibold">{text}</span>,
+            title: 'Tên chức vụ',
+            dataIndex: 'role_name',
+            key: 'role_name',
+            render: (text) => (
+                <Space>
+                    <IdcardOutlined className="text-blue-500" />
+                    <span className="font-semibold">{text}</span>
+                </Space>
+            ),
         },
         {
-            title: 'Trưởng phòng',
-            dataIndex: 'manager',
-            key: 'manager',
+            title: 'Mô tả',
+            dataIndex: 'description',
+            key: 'description',
+            ellipsis: true,
         },
         {
             title: 'Số nhân viên',
             dataIndex: 'employee_count',
             key: 'employee_count',
-            render: (count) => <Tag color="blue">{count || 0} nhân viên</Tag>,
-        },
-        {
-            title: 'Điện thoại',
-            dataIndex: 'phone',
-            key: 'phone',
+            render: (count) => <Tag color="cyan">{count || 0} nhân viên</Tag>,
         },
         {
             title: 'Hành động',
@@ -171,8 +172,8 @@ export default function DepartmentsPage() {
                     <Button type="text" icon={<EyeOutlined />} onClick={() => handleView(record.id)} className="text-green-600" />
                     <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} className="text-blue-600" />
                     <Popconfirm
-                        title="Xóa phòng ban?"
-                        description="Bạn có chắc chắn muốn xóa phòng ban này không?"
+                        title="Xóa chức vụ?"
+                        description="Bạn có chắc chắn muốn xóa chức vụ này không?"
                         onConfirm={() => handleDelete(record.id)}
                         okText="Có"
                         cancelText="Không"
@@ -184,24 +185,23 @@ export default function DepartmentsPage() {
         },
     ];
 
-    const filteredData = departments.filter(item =>
-        item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.manager?.toLowerCase().includes(searchText.toLowerCase())
+    const filteredData = roles.filter(item =>
+        item.role_name.toLowerCase().includes(searchText.toLowerCase())
     );
 
     return (
         <div style={{ padding: 24 }}>
             <div className="flex justify-between items-center mb-6">
-                <Title level={2} style={{ margin: 0 }}>Quản lý Phòng ban</Title>
+                <Title level={2} style={{ margin: 0 }}>Quản lý Chức vụ</Title>
                 <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} size="large">
-                    Thêm phòng ban
+                    Thêm chức vụ
                 </Button>
             </div>
 
             <Card bordered={false} className="shadow-sm">
                 <div className="mb-4">
                     <Input
-                        placeholder="Tìm kiếm theo tên phòng, trưởng phòng..."
+                        placeholder="Tìm kiếm theo tên chức vụ..."
                         prefix={<SearchOutlined />}
                         value={searchText}
                         onChange={e => setSearchText(e.target.value)}
@@ -220,7 +220,7 @@ export default function DepartmentsPage() {
             </Card>
 
             <Modal
-                title="Chi tiết phòng ban"
+                title="Chi tiết chức vụ"
                 open={isViewOpen}
                 onCancel={() => setIsViewOpen(false)}
                 footer={[
@@ -228,36 +228,28 @@ export default function DepartmentsPage() {
                 ]}
                 width={700}
             >
-                {viewingDepartment && (
+                {viewingRole && (
                     <div className="py-2">
                         <div className="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
-                            <div>
-                                <Text type="secondary">Tên phòng ban:</Text>
-                                <div className="font-bold text-lg">{viewingDepartment.name}</div>
-                            </div>
-                            <div>
-                                <Text type="secondary">Trưởng phòng:</Text>
-                                <div className="font-bold text-lg">{viewingDepartment.manager || 'N/A'}</div>
-                            </div>
-                            <div>
-                                <Text type="secondary">Số điện thoại:</Text>
-                                <div>{viewingDepartment.phone || 'N/A'}</div>
+                            <div className="col-span-2">
+                                <Text type="secondary">Tên chức vụ:</Text>
+                                <div className="font-bold text-lg">{viewingRole.role_name}</div>
                             </div>
                             <div>
                                 <Text type="secondary">Số nhân viên:</Text>
-                                <div><Tag color="blue">{(viewingDepartment.users?.length || viewingDepartment.employee_count || 0)} người</Tag></div>
+                                <div><Tag color="cyan">{viewingRole.employee_count} người</Tag></div>
                             </div>
                             <div className="col-span-2">
                                 <Text type="secondary">Mô tả:</Text>
-                                <div style={{ whiteSpace: 'pre-wrap' }}>{viewingDepartment.description || 'Không có mô tả'}</div>
+                                <div style={{ whiteSpace: 'pre-wrap' }}>{viewingRole.description || 'Không có mô tả'}</div>
                             </div>
                         </div>
 
-                        <Title level={5}><TeamOutlined style={{ marginRight: 8 }} />Danh sách nhân viên</Title>
+                        <Title level={5}><TeamOutlined style={{ marginRight: 8 }} />Nhân viên giữ chức vụ này</Title>
                         <List
                             itemLayout="horizontal"
-                            dataSource={viewingDepartment.users || []}
-                            locale={{ emptyText: 'Chưa có nhân viên nào đang làm việc tại phòng ban này' }}
+                            dataSource={viewingRole.users || []}
+                            locale={{ emptyText: 'Chưa có nhân viên nào giữ chức vụ này' }}
                             renderItem={(user: any) => (
                                 <List.Item>
                                     <List.Item.Meta
@@ -266,7 +258,7 @@ export default function DepartmentsPage() {
                                         description={
                                             <Space split={<span className="text-gray-300">|</span>}>
                                                 <Text type="secondary">{user.email}</Text>
-                                                <Tag>{user.role || 'Nhân viên'}</Tag>
+                                                <Text type="secondary">{user.department?.name || 'Không có phòng ban'}</Text>
                                             </Space>
                                         }
                                     />
@@ -278,11 +270,10 @@ export default function DepartmentsPage() {
             </Modal>
 
             <Modal
-                title={editingDepartment ? "Cập nhật phòng ban" : "Thêm phòng ban mới"}
+                title={editingRole ? "Cập nhật chức vụ" : "Thêm chức vụ mới"}
                 open={isModalOpen}
                 onCancel={() => setIsModalOpen(false)}
                 footer={null}
-                width={600}
             >
                 <Form
                     form={form}
@@ -291,38 +282,24 @@ export default function DepartmentsPage() {
                     className="mt-4"
                 >
                     <Form.Item
-                        name="name"
-                        label="Tên phòng ban"
-                        rules={[{ required: true, message: 'Vui lòng nhập tên phòng ban' }]}
+                        name="role_name"
+                        label="Tên chức vụ"
+                        rules={[{ required: true, message: 'Vui lòng nhập tên chức vụ' }]}
                     >
-                        <Input placeholder="VD: Phòng IT" />
+                        <Input placeholder="Ví dụ: Trưởng phòng kinh doanh" />
                     </Form.Item>
 
                     <Form.Item
                         name="description"
                         label="Mô tả"
                     >
-                        <Input.TextArea rows={3} placeholder="Mô tả nhiệm vụ của phòng ban" />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="manager"
-                        label="Trưởng phòng"
-                    >
-                        <Input placeholder="Nguyễn Văn A" />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="phone"
-                        label="Số điện thoại"
-                    >
-                        <Input placeholder="02838123456" />
+                        <Input.TextArea rows={4} placeholder="Mô tả chi tiết về chức năng, nhiệm vụ..." />
                     </Form.Item>
 
                     <div className="flex justify-end gap-2 mt-4">
                         <Button onClick={() => setIsModalOpen(false)}>Hủy</Button>
-                        <Button type="primary" htmlType="submit" loading={loading}>
-                            {editingDepartment ? 'Cập nhật' : 'Lưu'}
+                        <Button type="primary" htmlType="submit">
+                            {editingRole ? 'Cập nhật' : 'Lưu'}
                         </Button>
                     </div>
                 </Form>
