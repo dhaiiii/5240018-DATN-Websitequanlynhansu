@@ -11,6 +11,7 @@ export interface LoginResponse {
   firstName: string;
   lastName: string;
   role: string;
+  access_token: string;
   message: string;
 }
 

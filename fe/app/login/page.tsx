@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi, LoginRequest } from '@/lib/api/auth';
 
@@ -12,6 +12,14 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    // Check if user is already logged in
+    useEffect(() => {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            router.push('/dashboard');
+        }
+    }, [router]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -21,13 +29,14 @@ export default function LoginPage() {
         try {
             const credentials: LoginRequest = { email, password };
             const response = await authApi.login(credentials);
-            
+
             // Lưu thông tin user vào localStorage
             localStorage.setItem('user', JSON.stringify(response));
             localStorage.setItem('userEmail', response.email);
-            
+            localStorage.setItem('access_token', response.access_token);
+
             setSuccess('Đăng nhập thành công!');
-            
+
             // Chuyển hướng tới dashboard sau 1.5 giây
             setTimeout(() => {
                 router.push('/dashboard');

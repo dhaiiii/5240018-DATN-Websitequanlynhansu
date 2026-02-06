@@ -6,6 +6,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Department } from '../departments/entities/department.entity';
 import { Role } from '../roles/entities/role.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,13 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     const { departmentId, roleId, ...userData } = createUserDto;
+
+    // Hash password before saving
+    if (userData.password) {
+      const salt = await bcrypt.genSalt(10);
+      userData.password = await bcrypt.hash(userData.password, salt);
+    }
+
     const user = this.usersRepository.create(userData);
 
     if (departmentId) {

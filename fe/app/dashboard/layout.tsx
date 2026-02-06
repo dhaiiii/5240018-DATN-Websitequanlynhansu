@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Layout, Menu, Avatar, Dropdown, theme } from 'antd';
 import {
     DashboardOutlined,
@@ -70,9 +70,31 @@ export default function DashboardLayout({
 }) {
     const [collapsed, setCollapsed] = useState(false);
     const pathname = usePathname();
+    const router = useRouter();
     const {
         token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
+
+    // Check if user is authenticated
+    useEffect(() => {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            router.push('/login');
+        }
+    }, [router]);
+
+    const handleLogout = () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('userEmail');
+        router.push('/login');
+    };
+
+    const handleMenuClick = (e: any) => {
+        if (e.key === 'logout') {
+            handleLogout();
+        }
+    };
 
     const userMenu = {
         items: [
@@ -93,6 +115,7 @@ export default function DashboardLayout({
                 danger: true,
             },
         ],
+        onClick: handleMenuClick,
     };
 
     return (
