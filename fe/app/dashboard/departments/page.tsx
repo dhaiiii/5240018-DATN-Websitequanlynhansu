@@ -26,6 +26,8 @@ import {
     UserOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { apiClient } from '@/lib/api/api-client';
+import { isAdmin } from '@/lib/utils/auth.utils';
 
 const { Title, Text } = Typography;
 
@@ -50,11 +52,16 @@ export default function DepartmentsPage() {
     const [viewingDepartment, setViewingDepartment] = useState<Department | null>(null);
     const [searchText, setSearchText] = useState('');
     const [form] = Form.useForm();
+    const [userIsAdmin, setUserIsAdmin] = useState(false);
+
+    useEffect(() => {
+        setUserIsAdmin(isAdmin());
+    }, []);
 
     const fetchDepartments = async () => {
         setLoading(true);
         try {
-            const res = await fetch(API_URL);
+            const res = await apiClient.get('/departments');
             if (!res.ok) throw new Error('Failed to fetch');
             const data = await res.json();
             setDepartments(data);
@@ -85,7 +92,7 @@ export default function DepartmentsPage() {
     const handleView = async (id: number) => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_URL}/${id}`);
+            const res = await apiClient.get(`/departments/${id}`);
             if (!res.ok) throw new Error('Failed to fetch details');
             const data = await res.json();
             setViewingDepartment(data);
@@ -99,7 +106,7 @@ export default function DepartmentsPage() {
 
     const handleDelete = async (id: number) => {
         try {
-            const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+            const res = await apiClient.delete(`/departments/${id}`);
             if (res.ok) {
                 message.success('Xóa phòng ban thành công');
                 fetchDepartments();
@@ -115,17 +122,9 @@ export default function DepartmentsPage() {
         try {
             let res;
             if (editingDepartment) {
-                res = await fetch(`${API_URL}/${editingDepartment.id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(values),
-                });
+                res = await apiClient.patch(`/departments/${editingDepartment.id}`, values);
             } else {
-                res = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(values),
-                });
+                res = await apiClient.post('/departments', values);
             }
 
             if (res.ok) {
@@ -169,16 +168,20 @@ export default function DepartmentsPage() {
             render: (_, record) => (
                 <Space size="middle">
                     <Button type="text" icon={<EyeOutlined />} onClick={() => handleView(record.id)} className="text-green-600" />
-                    <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} className="text-blue-600" />
-                    <Popconfirm
-                        title="Xóa phòng ban?"
-                        description="Bạn có chắc chắn muốn xóa phòng ban này không?"
-                        onConfirm={() => handleDelete(record.id)}
-                        okText="Có"
-                        cancelText="Không"
-                    >
-                        <Button type="text" icon={<DeleteOutlined />} danger />
-                    </Popconfirm>
+                    {userIsAdmin && (
+                        <>
+                            <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} className="text-blue-600" />
+                            <Popconfirm
+                                title="Xóa phòng ban?"
+                                description="Bạn có chắc chắn muốb xóa phòng ban này không?"
+                                onConfirm={() => handleDelete(record.id)}
+                                okText="Có"
+                                cancelText="Không"
+                            >
+                                <Button type="text" icon={<DeleteOutlined />} danger />
+                            </Popconfirm>
+                        </>
+                    )}
                 </Space>
             ),
         },
@@ -193,9 +196,11 @@ export default function DepartmentsPage() {
         <div style={{ padding: 24 }}>
             <div className="flex justify-between items-center mb-6">
                 <Title level={2} style={{ margin: 0 }}>Quản lý Phòng ban</Title>
-                <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} size="large">
-                    Thêm phòng ban
-                </Button>
+                {userIsAdmin && (
+                    <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} size="large">
+                        Thêm phòng ban
+                    </Button>
+                )}
             </div>
 
             <Card bordered={false} className="shadow-sm">

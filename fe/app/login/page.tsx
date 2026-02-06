@@ -33,6 +33,8 @@ export default function LoginPage() {
             // Lưu thông tin user vào localStorage
             localStorage.setItem('user', JSON.stringify(response));
             localStorage.setItem('userEmail', response.email);
+            localStorage.setItem('userRole', response.role);
+            localStorage.setItem('permission_level', response.permission_level);
             localStorage.setItem('access_token', response.access_token);
 
             setSuccess('Đăng nhập thành công!');

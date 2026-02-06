@@ -31,10 +31,13 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
+    const permissionLevel = user.role_item?.permission_level || user.role || 'user';
+
     const payload = {
       email: user.email,
       sub: user.id,
-      role: user.role
+      role: user.role,
+      permission_level: permissionLevel,
     };
 
     return {
@@ -42,7 +45,9 @@ export class AuthService {
       email: user.email,
       firstName: user.first_name,
       lastName: user.last_name,
+      avatar: user.avatar,
       role: user.role,
+      permission_level: permissionLevel,
       access_token: this.jwtService.sign(payload),
       message: 'Login successful',
     };

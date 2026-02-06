@@ -27,6 +27,7 @@ import {
     IdcardOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { apiClient } from '@/lib/api/api-client';
 
 const { Title, Text } = Typography;
 
@@ -53,7 +54,7 @@ export default function RolesPage() {
     const fetchRoles = async () => {
         setLoading(true);
         try {
-            const res = await fetch(API_URL);
+            const res = await apiClient.get('/roles');
             if (!res.ok) throw new Error('Failed to fetch');
             const data = await res.json();
             setRoles(data);
@@ -84,7 +85,7 @@ export default function RolesPage() {
     const handleView = async (id: number) => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_URL}/${id}`);
+            const res = await apiClient.get(`/roles/${id}`);
             if (!res.ok) throw new Error('Failed to fetch details');
             const data = await res.json();
             setViewingRole(data);
@@ -98,7 +99,7 @@ export default function RolesPage() {
 
     const handleDelete = async (id: number) => {
         try {
-            const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+            const res = await apiClient.delete(`/roles/${id}`);
             if (res.ok) {
                 message.success('Xóa chức vụ thành công');
                 fetchRoles();
@@ -114,17 +115,9 @@ export default function RolesPage() {
         try {
             let res;
             if (editingRole) {
-                res = await fetch(`${API_URL}/${editingRole.id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(values),
-                });
+                res = await apiClient.patch(`/roles/${editingRole.id}`, values);
             } else {
-                res = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(values),
-                });
+                res = await apiClient.post('/roles', values);
             }
 
             if (res.ok) {

@@ -12,6 +12,13 @@ export class Role {
     @Column({ nullable: true })
     description: string;
 
+    @Column({
+        type: 'enum',
+        enum: ['admin', 'manager', 'user'],
+        default: 'user'
+    })
+    permission_level: string;
+
     @OneToMany(() => User, (user) => user.role_item)
     users: User[];
 }

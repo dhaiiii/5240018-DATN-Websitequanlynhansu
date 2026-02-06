@@ -17,49 +17,58 @@ import {
     DownOutlined,
     IdcardOutlined,
 } from '@ant-design/icons';
+import { isAdmin } from '@/lib/utils/auth.utils';
 
 const { Header, Sider, Content } = Layout;
 
-const menuItems = [
+const allMenuItems = [
     {
         key: '/dashboard',
         icon: <DashboardOutlined />,
         label: <Link href="/dashboard">Tổng quan</Link>,
+        roles: ['admin', 'user'],
     },
     {
         key: '/dashboard/employees',
         icon: <UserOutlined />,
         label: <Link href="/dashboard/employees">Nhân viên</Link>,
+        roles: ['admin'],
     },
     {
         key: '/dashboard/departments',
         icon: <TeamOutlined />,
         label: <Link href="/dashboard/departments">Phòng ban</Link>,
+        roles: ['admin', 'user'],
     },
     {
         key: '/dashboard/roles',
         icon: <IdcardOutlined />,
         label: <Link href="/dashboard/roles">Chức vụ</Link>,
+        roles: ['admin'],
     },
     {
         key: '/dashboard/timekeeping',
         icon: <ScheduleOutlined />,
         label: <Link href="/dashboard/timekeeping">Chấm công</Link>,
+        roles: ['admin', 'user'],
     },
     {
         key: '/dashboard/salary',
         icon: <DollarOutlined />,
         label: <Link href="/dashboard/salary">Lương</Link>,
+        roles: ['admin'],
     },
     {
         key: '/dashboard/statistics',
         icon: <BarChartOutlined />,
         label: <Link href="/dashboard/statistics">Thống kê</Link>,
+        roles: ['admin'],
     },
     {
         key: '/dashboard/accounts',
         icon: <SolutionOutlined />,
         label: <Link href="/dashboard/accounts">Tài khoản</Link>,
+        roles: ['admin'],
     },
 ];
 
@@ -68,7 +77,9 @@ export default function DashboardLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const [user, setUser] = useState<{ firstName: string; lastName: string; email: string; avatar: string | null } | null>(null);
     const [collapsed, setCollapsed] = useState(false);
+    const [menuItems, setMenuItems] = useState<any[]>([]);
     const pathname = usePathname();
     const router = useRouter();
     const {
@@ -83,10 +94,31 @@ export default function DashboardLayout({
         }
     }, [router]);
 
+    // Filter menu items based on user role
+    useEffect(() => {
+        const userRole = localStorage.getItem('userRole') || 'user';
+        const filtered = allMenuItems.filter(item =>
+            item.roles.includes(userRole)
+        );
+        setMenuItems(filtered);
+
+        // Get user info for header
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            try {
+                setUser(JSON.parse(userData));
+            } catch (e) {
+                console.error('Error parsing user data', e);
+            }
+        }
+    }, [router]);
+
     const handleLogout = () => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
         localStorage.removeItem('userEmail');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('permission_level');
         router.push('/login');
     };
 
@@ -146,10 +178,16 @@ export default function DashboardLayout({
                     <div className="flex items-center gap-4">
                         <Dropdown menu={userMenu as any} trigger={['click']}>
                             <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors">
-                                <Avatar style={{ backgroundColor: '#87d068' }} icon={<UserOutlined />} />
+                                <Avatar
+                                    src={user?.avatar}
+                                    style={{ backgroundColor: user?.avatar ? 'transparent' : '#87d068' }}
+                                    icon={!user?.avatar && <UserOutlined />}
+                                />
                                 <div className="hidden md:block text-sm">
-                                    <div className="font-medium text-gray-900">Người dùng Admin</div>
-                                    <div className="text-xs text-gray-500">admin@company.com</div>
+                                    <div className="font-medium text-gray-900">
+                                        {user ? `${user.firstName} ${user.lastName}` : 'Người dùng'}
+                                    </div>
+                                    <div className="text-xs text-gray-500">{user?.email || 'email@company.com'}</div>
                                 </div>
                                 <DownOutlined className="text-xs text-gray-400" />
                             </div>

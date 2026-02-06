@@ -11,6 +11,8 @@ export interface LoginResponse {
   firstName: string;
   lastName: string;
   role: string;
+  permission_level: string;
+  avatar: string | null;
   access_token: string;
   message: string;
 }

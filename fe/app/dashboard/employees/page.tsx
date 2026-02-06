@@ -24,6 +24,7 @@ import {
     UserOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { apiClient } from '@/lib/api/api-client';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -74,9 +75,9 @@ export default function EmployeesPage() {
         setLoading(true);
         try {
             const [usersRes, deptsRes, rolesRes] = await Promise.all([
-                fetch(API_URL),
-                fetch(DEPT_API_URL),
-                fetch(ROLE_API_URL)
+                apiClient.get('/users'),
+                apiClient.get('/departments'),
+                apiClient.get('/roles')
             ]);
 
             if (!usersRes.ok || !deptsRes.ok || !rolesRes.ok) throw new Error('Failed to fetch data');
@@ -142,7 +143,7 @@ export default function EmployeesPage() {
 
     const handleDelete = async (id: number) => {
         try {
-            const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+            const res = await apiClient.delete(`/users/${id}`);
             if (res.ok) {
                 message.success('Xóa nhân viên thành công');
                 fetchData();
@@ -172,17 +173,9 @@ export default function EmployeesPage() {
         try {
             let res;
             if (editingEmployee) {
-                res = await fetch(`${API_URL}/${editingEmployee.id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                });
+                res = await apiClient.patch(`/users/${editingEmployee.id}`, payload);
             } else {
-                res = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                });
+                res = await apiClient.post('/users', payload);
             }
 
             if (res.ok) {
