@@ -95,6 +95,12 @@ export class UsersService {
       }
     }
 
+    // Hash password if provided
+    if (userData.password) {
+      const salt = await bcrypt.genSalt(10);
+      userData.password = await bcrypt.hash(userData.password, salt);
+    }
+
     Object.assign(user, userData);
     return this.usersRepository.save(user);
   }

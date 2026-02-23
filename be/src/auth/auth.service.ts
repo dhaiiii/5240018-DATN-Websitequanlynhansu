@@ -24,6 +24,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    if (!user.is_active) {
+      throw new UnauthorizedException('Tài khoản đã bị khóa hoặc nhân viên đã nghỉ việc');
+    }
+
     const { password: _, ...result } = user;
     return result;
   }
