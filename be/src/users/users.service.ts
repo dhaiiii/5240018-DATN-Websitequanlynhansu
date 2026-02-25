@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -20,13 +20,23 @@ export class UsersService {
   ) { }
 
   async create(createUserDto: CreateUserDto) {
-    const { departmentId, roleId, ...userData } = createUserDto;
+    const { email, departmentId, roleId, ...userData } = createUserDto;
+
+    // Check if email already exists
+    const existingUser = await this.usersRepository.findOneBy({ email });
+    if (existingUser) {
+      throw new ConflictException('Đã tồn tại Email');
+    }
+
+    // Set default password if not provided
+    if (!userData.password) {
+      userData.password = '123456';
+    }
 
     // Hash password before saving
-    if (userData.password) {
-      const salt = await bcrypt.genSalt(10);
-      userData.password = await bcrypt.hash(userData.password, salt);
-    }
+    const salt = await bcrypt.genSalt(10);
+    userData.password = await bcrypt.hash(userData.password, salt);
+
 
     const user = this.usersRepository.create(userData);
 

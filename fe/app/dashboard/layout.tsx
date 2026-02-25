@@ -96,11 +96,12 @@ export default function DashboardLayout({
 
     // Filter menu items based on user role
     useEffect(() => {
-        const userRole = localStorage.getItem('userRole') || 'user';
+        const userLevel = localStorage.getItem('permission_level') || 'user';
         const filtered = allMenuItems.filter(item =>
-            item.roles.includes(userRole)
+            item.roles.includes(userLevel)
         );
         setMenuItems(filtered);
+
 
         // Get user info for header
         const userData = localStorage.getItem('user');
@@ -132,7 +133,7 @@ export default function DashboardLayout({
         items: [
             {
                 key: 'profile',
-                label: 'Thông tin cá nhân',
+                label: <Link href="/dashboard/profile">Thông tin cá nhân</Link>,
             },
             {
                 key: 'settings',

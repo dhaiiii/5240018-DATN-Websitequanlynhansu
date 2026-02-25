@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api/api-client';
 import { Modal, Form, Input, Select, message, Button, Space } from 'antd';
+import { getPermissionLevel } from '@/lib/utils/auth.utils';
+import { useRouter } from 'next/navigation';
 
 interface User {
     id: number;
@@ -18,9 +20,12 @@ export default function AccountsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [form] = Form.useForm();
+    const [createForm] = Form.useForm();
     const [submitting, setSubmitting] = useState(false);
+    const router = useRouter();
 
     const fetchUsers = async () => {
         try {
@@ -43,8 +48,14 @@ export default function AccountsPage() {
     };
 
     useEffect(() => {
+        const level = getPermissionLevel();
+        if (level !== 'admin') {
+            message.error('Bạn không có quyền truy cập trang này');
+            router.push('/dashboard');
+            return;
+        }
         fetchUsers();
-    }, []);
+    }, [router]);
 
     const handleEdit = (user: User) => {
         setEditingUser(user);
@@ -53,6 +64,44 @@ export default function AccountsPage() {
             role: user.role,
         });
         setIsEditModalOpen(true);
+    };
+
+    const handleCreate = async (values: any) => {
+        setSubmitting(true);
+
+        const nameParts = values.full_name.trim().split(' ');
+        const last_name = nameParts.pop() || '';
+        const first_name = nameParts.join(' ') || '';
+
+        try {
+            const response = await apiClient.post('/users', {
+                first_name,
+                last_name,
+                email: values.email,
+                password: values.password || undefined,
+                role: 'user', // Default role for new accounts
+                is_active: true
+            });
+
+            if (response.ok) {
+                message.success('Thêm tài khoản thành công');
+                setIsCreateModalOpen(false);
+                createForm.resetFields();
+                fetchUsers();
+            } else {
+                if (response.status === 409) {
+                    message.error('Đã tồn tại Email');
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    message.error(errorData.message || 'Thêm tài khoản thất bại');
+                }
+            }
+
+        } catch (error) {
+            message.error('Lỗi khi thêm tài khoản');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleUpdate = async (values: any) => {
@@ -113,7 +162,13 @@ export default function AccountsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Quản lý Tài khoản</h1>
-                <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                <button
+                    onClick={() => {
+                        createForm.resetFields();
+                        setIsCreateModalOpen(true);
+                    }}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
                     Thêm tài khoản
                 </button>
             </div>
@@ -237,6 +292,71 @@ export default function AccountsPage() {
                                 className="bg-indigo-600"
                             >
                                 Lưu thay đổi
+                            </Button>
+                        </Space>
+                    </Form.Item>
+                </Form>
+            </Modal>
+
+            <Modal
+                title="Thêm tài khoản mới"
+                open={isCreateModalOpen}
+                onCancel={() => {
+                    createForm.resetFields();
+                    setIsCreateModalOpen(false);
+                }}
+                footer={null}
+                destroyOnClose
+            >
+                <Form
+                    form={createForm}
+                    layout="vertical"
+                    onFinish={handleCreate}
+                    className="mt-4"
+                    autoComplete="off"
+                >
+                    <Form.Item
+                        name="full_name"
+                        label="Họ và tên"
+                        rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
+                    >
+                        <Input placeholder="Nguyễn Văn A" autoComplete="off" />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="email"
+                        label="Email"
+                        rules={[
+                            { required: true, message: 'Vui lòng nhập email' },
+                            { type: 'email', message: 'Email không hợp lệ' }
+                        ]}
+                    >
+                        <Input placeholder="email@company.com" autoComplete="off" />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="password"
+                        label="Mật khẩu"
+                        extra="Mặc định là 123456 nếu bỏ trống"
+                    >
+                        <Input.Password placeholder="******" autoComplete="new-password" />
+                    </Form.Item>
+
+                    <Form.Item className="mb-0 text-right">
+                        <Space>
+                            <Button onClick={() => {
+                                createForm.resetFields();
+                                setIsCreateModalOpen(false);
+                            }}>
+                                Hủy
+                            </Button>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                loading={submitting}
+                                className="bg-indigo-600"
+                            >
+                                Lưu
                             </Button>
                         </Space>
                     </Form.Item>

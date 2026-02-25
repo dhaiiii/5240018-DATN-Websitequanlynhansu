@@ -5,11 +5,18 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PermissionGuard } from '../auth/permission.guard';
 import { RequirePermission } from '../auth/permission.decorator';
 import { Permission } from '../auth/permission.enum';
+import { CurrentUser } from '../auth/current-user.decorator';
 
 @Controller('users')
 @UseGuards(PermissionGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
+
+  @Get('me')
+  getMe(@CurrentUser() user: any) {
+    return this.usersService.findOne(user.userId);
+  }
+
 
   @Post()
   @RequirePermission(Permission.Admin)
