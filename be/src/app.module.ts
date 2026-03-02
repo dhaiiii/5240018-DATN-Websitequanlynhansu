@@ -6,6 +6,7 @@ import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { DepartmentsModule } from './departments/departments.module';
+import { TimekeepingModule } from './timekeeping/timekeeping.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { DepartmentsModule } from './departments/departments.module';
     UsersModule,
     AuthModule,
     DepartmentsModule,
+    TimekeepingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
