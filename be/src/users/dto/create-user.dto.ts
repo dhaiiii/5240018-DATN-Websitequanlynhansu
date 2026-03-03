@@ -7,6 +7,7 @@ export class CreateUserDto {
     avatar?: string;
     address?: string;
     gender?: 'Nam' | 'Nữ' | 'Khác';
+    birth_date?: any;
     is_active?: boolean;
     role?: string;
     departmentId?: number;

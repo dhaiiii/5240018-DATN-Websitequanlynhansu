@@ -14,7 +14,8 @@ import {
     message,
     Popconfirm,
     Typography,
-    Card
+    Card,
+    DatePicker
 } from 'antd';
 import {
     PlusOutlined,
@@ -25,6 +26,7 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { apiClient } from '@/lib/api/api-client';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -47,6 +49,7 @@ interface Employee {
     gender: string;
     email: string;
     phone: string;
+    birth_date?: string;
     address: string;
     avatar?: string;
     department?: Department;
@@ -98,6 +101,7 @@ export default function EmployeesPage() {
                 role_item: u.role_item,
                 status: u.is_active ? 'Đang làm việc' : 'Đã nghỉ',
                 phone: u.phone,
+                birth_date: u.birth_date,
                 avatar: u.avatar,
                 gender: u.gender || 'Nam',
                 address: u.address,
@@ -136,7 +140,8 @@ export default function EmployeesPage() {
         form.setFieldsValue({
             ...record,
             departmentId: record.department?.id,
-            roleId: record.role_item?.id
+            roleId: record.role_item?.id,
+            birth_date: record.birth_date ? dayjs(record.birth_date) : null
         });
         setIsModalOpen(true);
     };
@@ -168,6 +173,7 @@ export default function EmployeesPage() {
             is_active: values.status === 'Đang làm việc',
             departmentId: values.departmentId,
             roleId: values.roleId,
+            birth_date: values.birth_date ? values.birth_date.format('YYYY-MM-DD') : null,
         };
 
         try {
@@ -221,6 +227,12 @@ export default function EmployeesPage() {
             title: 'Email',
             dataIndex: 'email',
             key: 'email',
+        },
+        {
+            title: 'Ngày sinh',
+            dataIndex: 'birth_date',
+            key: 'birth_date',
+            render: (date) => date ? dayjs(date).format('DD/MM/YYYY') : 'Chưa đặt',
         },
         {
             title: 'Phòng ban',
@@ -379,6 +391,10 @@ export default function EmployeesPage() {
                                     <Option key={role.id} value={role.id}>{role.role_name}</Option>
                                 ))}
                             </Select>
+                        </Form.Item>
+
+                        <Form.Item name="birth_date" label="Ngày sinh">
+                            <DatePicker className="w-full" format="DD/MM/YYYY" placeholder="Chọn ngày sinh" />
                         </Form.Item>
 
                         <Form.Item name="status" label="Trạng thái">

@@ -111,7 +111,16 @@ export class UsersService {
       userData.password = await bcrypt.hash(userData.password, salt);
     }
 
+    console.log('UsersService.update - userData:', userData);
     Object.assign(user, userData);
+    console.log('UsersService.update - user object before save:', user);
+    return this.usersRepository.save(user);
+  }
+
+  async updateAvatar(id: number, avatarPath: string) {
+    const user = await this.findOne(id);
+    if (!user) return null;
+    user.avatar = avatarPath;
     return this.usersRepository.save(user);
   }
 

@@ -13,6 +13,9 @@ export class User {
     @Column()
     last_name: string;
 
+    @Column({ type: 'date', nullable: true })
+    birth_date: Date;
+
     @Column({ unique: true })
     email: string;
 

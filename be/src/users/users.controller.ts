@@ -1,4 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -15,6 +18,29 @@ export class UsersController {
   @Get('me')
   getMe(@CurrentUser() user: any) {
     return this.usersService.findOne(user.userId);
+  }
+
+  @Patch('me')
+  updateMe(@CurrentUser() user: any, @Body() updateUserDto: UpdateUserDto) {
+    // Only allow updating certain fields for security
+    const { first_name, last_name, phone, address, gender, birth_date } = updateUserDto;
+    return this.usersService.update(user.userId, { first_name, last_name, phone, address, gender, birth_date });
+  }
+
+  @Post('avatar')
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: './uploads',
+      filename: (req, file, callback) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = extname(file.originalname);
+        callback(null, `avatar-${uniqueSuffix}${ext}`);
+      },
+    }),
+  }))
+  async uploadAvatar(@CurrentUser() user: any, @UploadedFile() file: Express.Multer.File) {
+    const avatarUrl = `http://localhost:3001/uploads/${file.filename}`;
+    return this.usersService.updateAvatar(user.userId, avatarUrl);
   }
 
 

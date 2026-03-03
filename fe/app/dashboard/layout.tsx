@@ -16,6 +16,7 @@ import {
     MenuUnfoldOutlined,
     DownOutlined,
     IdcardOutlined,
+    FileTextOutlined,
 } from '@ant-design/icons';
 import { isAdmin } from '@/lib/utils/auth.utils';
 
@@ -50,6 +51,12 @@ const allMenuItems = [
         key: '/dashboard/timekeeping',
         icon: <ScheduleOutlined />,
         label: <Link href="/dashboard/timekeeping">Chấm công</Link>,
+        roles: ['admin', 'user'],
+    },
+    {
+        key: '/dashboard/requests',
+        icon: <FileTextOutlined />,
+        label: <Link href="/dashboard/requests">Đơn từ</Link>,
         roles: ['admin', 'user'],
     },
     {

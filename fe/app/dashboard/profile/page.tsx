@@ -1,7 +1,22 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Card, Avatar, Descriptions, Button, Upload, message, Skeleton } from 'antd';
+import {
+    Card,
+    Avatar,
+    Button,
+    message,
+    Skeleton,
+    Modal,
+    Form,
+    Input,
+    Select,
+    Row,
+    Col,
+    Space,
+    Upload,
+    DatePicker
+} from 'antd';
 import {
     UserOutlined,
     EditOutlined,
@@ -10,16 +25,16 @@ import {
     MailOutlined,
     TeamOutlined,
     EnvironmentOutlined,
-    FacebookOutlined,
-    ArrowLeftOutlined,
 } from '@ant-design/icons';
 import { apiClient } from '@/lib/api/api-client';
 import { useRouter } from 'next/navigation';
+import dayjs from 'dayjs';
 
 interface UserProfile {
     id: number;
     first_name: string;
     last_name: string;
+    birth_date: string | null;
     email: string;
     phone: string;
     address: string;
@@ -41,28 +56,98 @@ interface UserProfile {
 export default function ProfilePage() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+    const [form] = Form.useForm();
     const router = useRouter();
 
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const response = await apiClient.get('/users/me');
-                if (response.ok) {
-                    const data = await response.json();
-                    setProfile(data);
-                } else {
-                    message.error('Không thể tải thông tin cá nhân');
-                }
-            } catch (error) {
-                console.error('Error fetching profile:', error);
-                message.error('Lỗi khi tải thông tin cá nhân');
-            } finally {
-                setLoading(false);
+    const fetchProfile = async () => {
+        try {
+            setLoading(true);
+            const response = await apiClient.get('/users/me');
+            if (response.ok) {
+                const data = await response.json();
+                setProfile(data);
+            } else {
+                message.error('Không thể tải thông tin cá nhân');
             }
-        };
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+            message.error('Lỗi khi tải thông tin cá nhân');
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchProfile();
     }, []);
+
+    const handleEditProfile = async (values: any) => {
+        try {
+            // Format date correctly for backend
+            const submitValues = {
+                ...values,
+                birth_date: values.birth_date ? values.birth_date.format('YYYY-MM-DD') : null
+            };
+            console.log('Profile edit values:', submitValues);
+            const response = await apiClient.patch('/users/me', submitValues);
+            if (response.ok) {
+                message.success('Cập nhật thông tin thành công');
+                setIsEditModalVisible(false);
+                fetchProfile();
+            } else {
+                message.error('Cập nhật thất bại');
+            }
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            message.error('Đã xảy ra lỗi khi cập nhật');
+        }
+    };
+
+    const handleAvatarUpload = async (options: any) => {
+        const { file, onSuccess, onError } = options;
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch('http://localhost:3001/api/users/avatar', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                message.success('Cập nhật ảnh đại diện thành công');
+                fetchProfile();
+                onSuccess(data);
+            } else {
+                message.error('Tải ảnh lên thất bại');
+                onError(new Error('Upload failed'));
+            }
+        } catch (error) {
+            console.error('Avatar upload error:', error);
+            message.error('Lỗi khi tải ảnh lên');
+            onError(error);
+        }
+    };
+
+    const openEditModal = () => {
+        if (profile) {
+            form.setFieldsValue({
+                first_name: profile.first_name,
+                last_name: profile.last_name,
+                phone: profile.phone,
+                address: profile.address,
+                gender: profile.gender,
+                birth_date: profile.birth_date ? dayjs(profile.birth_date) : null,
+            });
+            setIsEditModalVisible(true);
+        }
+    };
 
     if (loading) {
         return (
@@ -90,20 +175,32 @@ export default function ProfilePage() {
                     />
                 </div>
 
-
                 <div className="absolute -bottom-20 left-8 flex items-end gap-6">
-                    <div className="relative">
-                        <Avatar
-                            size={128}
-                            src={profile.avatar}
-                            icon={<UserOutlined />}
-                            className="border-4 border-white shadow-xl bg-white"
-                        />
+                    <div className="relative group cursor-pointer">
+                        <Upload
+                            name="file"
+                            showUploadList={false}
+                            customRequest={handleAvatarUpload}
+                        >
+                            <div className="relative">
+                                <Avatar
+                                    size={128}
+                                    src={profile.avatar}
+                                    icon={<UserOutlined />}
+                                    className="border-4 border-white shadow-xl bg-white group-hover:opacity-80 transition-opacity"
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="bg-black/40 rounded-full p-2 text-white">
+                                        <EditOutlined style={{ fontSize: '24px' }} />
+                                    </div>
+                                </div>
+                            </div>
+                        </Upload>
                     </div>
                     <div className="mb-4">
                         <h1 className="text-3xl font-bold text-gray-900 mb-1">{fullName}</h1>
                         <div className="flex gap-4 text-sm text-gray-500 font-medium">
-                            <span className="flex items-center gap-1.5"><EnvironmentOutlined /> Hà Nội</span>
+                            <span className="flex items-center gap-1.5"><EnvironmentOutlined /> {profile.address || 'Chưa cài đặt địa chỉ'}</span>
                             <span className="flex items-center gap-1.5"><CalendarOutlined /> Gia nhập {new Date(profile.created_at).toLocaleDateString('vi-VN')}</span>
                         </div>
                     </div>
@@ -117,7 +214,15 @@ export default function ProfilePage() {
                         title={
                             <div className="flex items-center justify-between">
                                 <span className="flex items-center gap-2"><UserOutlined className="text-indigo-500" /> Thông tin cá nhân</span>
-                                <Button type="text" size="small" icon={<EditOutlined />} className="text-gray-400 hover:text-indigo-600">Chỉnh sửa</Button>
+                                <Button
+                                    type="text"
+                                    size="small"
+                                    icon={<EditOutlined />}
+                                    className="text-gray-400 hover:text-indigo-600"
+                                    onClick={openEditModal}
+                                >
+                                    Chỉnh sửa
+                                </Button>
                             </div>
                         }
                         className="shadow-sm border-gray-100 rounded-xl"
@@ -136,12 +241,14 @@ export default function ProfilePage() {
                                         <span className="font-medium text-gray-900">{fullName}</span>
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        <span className="text-sm text-gray-500">Ngày sinh</span>
-                                        <span className="font-medium text-gray-900">Chưa cài đặt</span>
+                                        <span className="text-sm text-gray-500">Giới tính</span>
+                                        <span className="font-medium text-gray-900">{profile.gender}</span>
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        <span className="text-sm text-gray-500">Thâm niên</span>
-                                        <span className="font-medium text-gray-900">0 năm</span>
+                                        <span className="text-sm text-gray-500">Ngày sinh</span>
+                                        <span className="font-medium text-gray-900">
+                                            {profile.birth_date ? dayjs(profile.birth_date).format('DD/MM/YYYY') : 'Chưa cài đặt'}
+                                        </span>
                                     </div>
                                     <div className="flex flex-col gap-1">
                                         <span className="text-sm text-gray-500">Phòng ban</span>
@@ -173,24 +280,6 @@ export default function ProfilePage() {
                                         <div className="flex flex-col">
                                             <span className="text-xs text-gray-500">Email công việc</span>
                                             <span className="text-sm font-medium text-gray-900">{profile.email}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 text-xs text-center font-bold">
-                                            TG
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-gray-500">Telegram</span>
-                                            <span className="text-sm font-medium text-gray-900 italic text-gray-400">Chưa cài đặt</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
-                                            <FacebookOutlined />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-gray-500">Facebook</span>
-                                            <span className="text-sm font-medium text-gray-900 italic text-gray-400">Chưa cài đặt</span>
                                         </div>
                                     </div>
                                 </div>
@@ -227,6 +316,84 @@ export default function ProfilePage() {
                     </Card>
                 </div>
             </div>
+
+            {/* Edit Profile Modal */}
+            <Modal
+                title="Chỉnh sửa thông tin cá nhân"
+                open={isEditModalVisible}
+                onCancel={() => setIsEditModalVisible(false)}
+                footer={null}
+                centered
+            >
+                <Form
+                    form={form}
+                    layout="vertical"
+                    onFinish={handleEditProfile}
+                    className="mt-4"
+                >
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="first_name"
+                                label="Họ (First Name)"
+                                rules={[{ required: true, message: 'Vui lòng nhập họ!' }]}
+                            >
+                                <Input placeholder="Họ" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="last_name"
+                                label="Tên (Last Name)"
+                                rules={[{ required: true, message: 'Vui lòng nhập tên!' }]}
+                            >
+                                <Input placeholder="Tên" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Form.Item
+                        name="phone"
+                        label="Số điện thoại"
+                    >
+                        <Input placeholder="Nhập số điện thoại" />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="address"
+                        label="Địa chỉ"
+                    >
+                        <Input placeholder="Nhập địa chỉ" />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="gender"
+                        label="Giới tính"
+                    >
+                        <Select>
+                            <Select.Option value="Nam">Nam</Select.Option>
+                            <Select.Option value="Nữ">Nữ</Select.Option>
+                            <Select.Option value="Khác">Khác</Select.Option>
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="birth_date"
+                        label="Ngày sinh"
+                    >
+                        <DatePicker className="w-full" format="DD/MM/YYYY" placeholder="Chọn ngày sinh" />
+                    </Form.Item>
+
+                    <Form.Item className="mb-0 flex justify-end">
+                        <Space>
+                            <Button onClick={() => setIsEditModalVisible(false)}>Hủy</Button>
+                            <Button type="primary" htmlType="submit" className="bg-indigo-600">
+                                Lưu thay đổi
+                            </Button>
+                        </Space>
+                    </Form.Item>
+                </Form>
+            </Modal>
         </div>
     );
 }
