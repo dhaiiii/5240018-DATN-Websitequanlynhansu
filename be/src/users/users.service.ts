@@ -38,7 +38,10 @@ export class UsersService {
     userData.password = await bcrypt.hash(userData.password, salt);
 
 
-    const user = this.usersRepository.create(userData);
+    const user = this.usersRepository.create({
+      ...userData,
+      email
+    });
 
     if (departmentId) {
       const department = await this.departmentRepository.findOneBy({ id: departmentId });
