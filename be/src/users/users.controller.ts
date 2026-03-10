@@ -39,8 +39,7 @@ export class UsersController {
     }),
   }))
   async uploadAvatar(@CurrentUser() user: any, @UploadedFile() file: Express.Multer.File) {
-    const avatarUrl = `http://localhost:3001/uploads/${file.filename}`;
-    return this.usersService.updateAvatar(user.userId, avatarUrl);
+    return this.usersService.updateAvatar(user.userId, file.filename);
   }
 
 

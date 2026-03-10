@@ -246,7 +246,7 @@ export default function RolesPage() {
                             renderItem={(user: any) => (
                                 <List.Item>
                                     <List.Item.Meta
-                                        avatar={<Avatar src={user.avatar} icon={<UserOutlined />} />}
+                                        avatar={<Avatar src={user.avatar ? `http://localhost:3001/uploads/${user.avatar}` : undefined} icon={<UserOutlined />} />}
                                         title={<Text strong>{user.first_name || ''} {user.last_name || ''}</Text>}
                                         description={
                                             <Space split={<span className="text-gray-300">|</span>}>

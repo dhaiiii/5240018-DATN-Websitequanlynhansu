@@ -67,6 +67,17 @@ export default function ProfilePage() {
             if (response.ok) {
                 const data = await response.json();
                 setProfile(data);
+                // Update local storage to sync header
+                const userData = localStorage.getItem('user');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    localStorage.setItem('user', JSON.stringify({
+                        ...user,
+                        avatar: data.avatar,
+                        firstName: data.first_name,
+                        lastName: data.last_name
+                    }));
+                }
             } else {
                 message.error('Không thể tải thông tin cá nhân');
             }
@@ -163,6 +174,12 @@ export default function ProfilePage() {
 
     const fullName = `${profile.first_name} ${profile.last_name}`;
 
+    const getAvatarUrl = (avatar: string | null) => {
+        if (!avatar) return undefined;
+        if (avatar.startsWith('http')) return avatar;
+        return `http://localhost:3001/uploads/${avatar}`;
+    };
+
     return (
         <div className="max-w-5xl mx-auto py-8 px-4">
             {/* Header Banner */}
@@ -185,7 +202,7 @@ export default function ProfilePage() {
                             <div className="relative">
                                 <Avatar
                                     size={128}
-                                    src={profile.avatar}
+                                    src={getAvatarUrl(profile.avatar)}
                                     icon={<UserOutlined />}
                                     className="border-4 border-white shadow-xl bg-white group-hover:opacity-80 transition-opacity"
                                 />

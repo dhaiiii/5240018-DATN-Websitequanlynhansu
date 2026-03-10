@@ -158,6 +158,12 @@ export default function DashboardLayout({
         onClick: handleMenuClick,
     };
 
+    const getAvatarUrl = (avatar: string | null) => {
+        if (!avatar) return undefined;
+        if (avatar.startsWith('http')) return avatar;
+        return `http://localhost:3001/uploads/${avatar}`;
+    };
+
     return (
         <Layout style={{ minHeight: '100vh' }}>
             <Sider trigger={null} collapsible collapsed={collapsed} theme="light">
@@ -187,7 +193,7 @@ export default function DashboardLayout({
                         <Dropdown menu={userMenu as any} trigger={['click']}>
                             <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors">
                                 <Avatar
-                                    src={user?.avatar}
+                                    src={getAvatarUrl(user?.avatar || null)}
                                     style={{ backgroundColor: user?.avatar ? 'transparent' : '#87d068' }}
                                     icon={!user?.avatar && <UserOutlined />}
                                 />

@@ -207,6 +207,12 @@ export default function EmployeesPage() {
         }
     };
 
+    const getAvatarUrl = (avatar?: string) => {
+        if (!avatar) return undefined;
+        if (avatar.startsWith('http')) return avatar;
+        return `http://localhost:3001/uploads/${avatar}`;
+    };
+
     const columns: ColumnsType<Employee> = [
         {
             title: 'Mã NV',
@@ -218,7 +224,7 @@ export default function EmployeesPage() {
             key: 'fullName',
             render: (_, record) => (
                 <Space>
-                    <Avatar src={record.avatar} icon={<UserOutlined />} />
+                    <Avatar src={getAvatarUrl(record.avatar)} icon={<UserOutlined />} />
                     {record.fullName}
                 </Space>
             ),
