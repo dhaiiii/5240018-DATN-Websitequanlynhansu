@@ -19,6 +19,7 @@ import {
     FileTextOutlined,
 } from '@ant-design/icons';
 import { isAdmin } from '@/lib/utils/auth.utils';
+import { getAvatarUrl } from '@/lib/utils/image.utils';
 
 const { Header, Sider, Content } = Layout;
 
@@ -158,11 +159,6 @@ export default function DashboardLayout({
         onClick: handleMenuClick,
     };
 
-    const getAvatarUrl = (avatar: string | null) => {
-        if (!avatar) return undefined;
-        if (avatar.startsWith('http')) return avatar;
-        return `http://localhost:3001/uploads/${avatar}`;
-    };
 
     return (
         <Layout style={{ minHeight: '100vh' }}>

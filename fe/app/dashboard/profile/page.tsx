@@ -27,6 +27,7 @@ import {
     EnvironmentOutlined,
 } from '@ant-design/icons';
 import { apiClient } from '@/lib/api/api-client';
+import { getAvatarUrl } from '@/lib/utils/image.utils';
 import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -174,11 +175,6 @@ export default function ProfilePage() {
 
     const fullName = `${profile.first_name} ${profile.last_name}`;
 
-    const getAvatarUrl = (avatar: string | null) => {
-        if (!avatar) return undefined;
-        if (avatar.startsWith('http')) return avatar;
-        return `http://localhost:3001/uploads/${avatar}`;
-    };
 
     return (
         <div className="max-w-5xl mx-auto py-8 px-4">

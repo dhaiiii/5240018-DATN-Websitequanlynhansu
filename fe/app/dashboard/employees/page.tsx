@@ -26,6 +26,7 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { apiClient } from '@/lib/api/api-client';
+import { getAvatarUrl } from '@/lib/utils/image.utils';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -207,11 +208,6 @@ export default function EmployeesPage() {
         }
     };
 
-    const getAvatarUrl = (avatar?: string) => {
-        if (!avatar) return undefined;
-        if (avatar.startsWith('http')) return avatar;
-        return `http://localhost:3001/uploads/${avatar}`;
-    };
 
     const columns: ColumnsType<Employee> = [
         {
