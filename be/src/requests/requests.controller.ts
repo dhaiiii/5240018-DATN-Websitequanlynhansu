@@ -19,6 +19,11 @@ export class RequestsController {
         return this.requestsService.findAll();
     }
 
+    @Get('stats')
+    getDashboardStats(@Query('email') email?: string) {
+        return this.requestsService.getDashboardStats(email);
+    }
+
     @Patch(':id/status')
     updateStatus(@Param('id') id: string, @Body() body: { status: string, approverEmail: string }) {
         return this.requestsService.updateStatus(+id, body.status, body.approverEmail);

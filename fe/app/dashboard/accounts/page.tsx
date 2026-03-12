@@ -273,10 +273,15 @@ export default function AccountsPage() {
 
                     <Form.Item label="Mật khẩu">
                         <Button
-                            type="dashed"
                             danger
                             block
                             onClick={handleResetPassword}
+                            style={{
+                                backgroundColor: '#fff2f0',
+                                borderStyle: 'dashed',
+                                borderColor: '#ffccc7',
+                                color: '#ff4d4f'
+                            }}
                         >
                             Đặt lại mật khẩu mặc định
                         </Button>

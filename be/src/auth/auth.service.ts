@@ -35,9 +35,16 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
-    const permissionLevel = user.role === 'admin' ? 'admin' : (user.role_item?.permission_level || user.role || 'user');
+    // Prioritize role_item.permission_level if available
+    let permissionLevel = user.role_item?.permission_level;
 
-    console.log('AuthService.login - user.role:', user.role);
+    // Fallback to legacy role if no role_item permission
+    if (!permissionLevel) {
+      permissionLevel = user.role === 'admin' ? 'admin' : (user.role || 'user');
+    }
+
+    console.log('AuthService.login - user legacy role:', user.role);
+    console.log('AuthService.login - role_item level:', user.role_item?.permission_level);
     console.log('AuthService.login - determined permissionLevel:', permissionLevel);
 
     const payload = {
