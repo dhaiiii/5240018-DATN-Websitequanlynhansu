@@ -102,11 +102,12 @@ export default function DashboardLayout({
         }
     }, [router]);
 
-    // Filter menu items based on user role
     useEffect(() => {
-        const userLevel = localStorage.getItem('permission_level') || 'user';
+        const permissionLevel = localStorage.getItem('permission_level') || 'user';
+        const userRole = localStorage.getItem('userRole') || 'user';
+
         const filtered = allMenuItems.filter(item =>
-            item.roles.includes(userLevel)
+            item.roles.includes(permissionLevel) || item.roles.includes(userRole)
         );
         setMenuItems(filtered);
 

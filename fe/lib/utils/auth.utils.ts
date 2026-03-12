@@ -4,12 +4,13 @@ export const getPermissionLevel = (): string => {
 };
 
 export const isAdmin = (): boolean => {
-    return getPermissionLevel() === 'admin';
+    return getPermissionLevel() === 'admin' || getUserRole() === 'admin';
 };
 
 export const isManager = (): boolean => {
     const level = getPermissionLevel();
-    return level === 'admin' || level === 'manager';
+    const role = getUserRole();
+    return level === 'admin' || level === 'manager' || role === 'admin';
 };
 
 export const isUser = (): boolean => {

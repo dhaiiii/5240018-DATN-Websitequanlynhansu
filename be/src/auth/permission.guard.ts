@@ -44,12 +44,19 @@ export class PermissionGuard extends JwtAuthGuard implements CanActivate {
 
         const userLevel = permissionHierarchy[userPermission] || 0;
 
+        console.log('PermissionGuard - userPermission:', userPermission);
+        console.log('PermissionGuard - userLevel:', userLevel);
+        console.log('PermissionGuard - requiredPermissions:', requiredPermissions);
+
         // Check if user has any of the required permissions
         // Admin can access everything, manager can access manager and user, user can only access user
         const hasPermission = requiredPermissions.some((required) => {
             const requiredLevel = permissionHierarchy[required];
+            console.log(`PermissionGuard - checking required: ${required}, levels: ${userLevel} >= ${requiredLevel}`);
             return userLevel >= requiredLevel;
         });
+
+        console.log('PermissionGuard - hasPermission:', hasPermission);
 
         if (!hasPermission) {
             throw new ForbiddenException(

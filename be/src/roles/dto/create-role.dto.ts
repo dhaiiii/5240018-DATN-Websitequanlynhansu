@@ -8,4 +8,8 @@ export class CreateRoleDto {
     @IsOptional()
     @IsString()
     description?: string;
+
+    @IsOptional()
+    @IsString()
+    permission_level?: string;
 }

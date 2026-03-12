@@ -35,7 +35,10 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
-    const permissionLevel = user.role_item?.permission_level || user.role || 'user';
+    const permissionLevel = user.role === 'admin' ? 'admin' : (user.role_item?.permission_level || user.role || 'user');
+
+    console.log('AuthService.login - user.role:', user.role);
+    console.log('AuthService.login - determined permissionLevel:', permissionLevel);
 
     const payload = {
       email: user.email,
@@ -43,6 +46,9 @@ export class AuthService {
       role: user.role,
       permission_level: permissionLevel,
     };
+
+    const accessToken = this.jwtService.sign(payload);
+    console.log('AuthService.login - token payload:', payload);
 
     return {
       id: user.id,
@@ -52,7 +58,7 @@ export class AuthService {
       avatar: user.avatar,
       role: user.role,
       permission_level: permissionLevel,
-      access_token: this.jwtService.sign(payload),
+      access_token: accessToken,
       message: 'Login successful',
     };
   }

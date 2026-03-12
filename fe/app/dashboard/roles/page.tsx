@@ -35,6 +35,7 @@ interface Role {
     id: number;
     role_name: string;
     description: string;
+    permission_level: string;
     employee_count: number;
     users?: any[];
 }
@@ -73,6 +74,7 @@ export default function RolesPage() {
     const handleAdd = () => {
         setEditingRole(null);
         form.resetFields();
+        form.setFieldValue('permission_level', 'user');
         setIsModalOpen(true);
     };
 
@@ -144,6 +146,23 @@ export default function RolesPage() {
                     <span className="font-semibold">{text}</span>
                 </Space>
             ),
+        },
+        {
+            title: 'Mức độ quyền hạn',
+            dataIndex: 'permission_level',
+            key: 'permission_level',
+            render: (level) => {
+                let color = 'blue';
+                let text = 'Nhân viên (User)';
+                if (level === 'admin') {
+                    color = 'red';
+                    text = 'Quản trị viên (Admin)';
+                } else if (level === 'manager') {
+                    color = 'orange';
+                    text = 'Quản lý (Manager)';
+                }
+                return <Tag color={color}>{text.toUpperCase()}</Tag>;
+            }
         },
         {
             title: 'Mô tả',
@@ -229,6 +248,14 @@ export default function RolesPage() {
                                 <div className="font-bold text-lg">{viewingRole.role_name}</div>
                             </div>
                             <div>
+                                <Text type="secondary">Mức độ quyền hạn:</Text>
+                                <div>
+                                    <Tag color={viewingRole.permission_level === 'admin' ? 'red' : viewingRole.permission_level === 'manager' ? 'orange' : 'blue'}>
+                                        {viewingRole.permission_level?.toUpperCase() || 'USER'}
+                                    </Tag>
+                                </div>
+                            </div>
+                            <div>
                                 <Text type="secondary">Số nhân viên:</Text>
                                 <div><Tag color="cyan">{viewingRole.employee_count} người</Tag></div>
                             </div>
@@ -280,6 +307,20 @@ export default function RolesPage() {
                         rules={[{ required: true, message: 'Vui lòng nhập tên chức vụ' }]}
                     >
                         <Input placeholder="Ví dụ: Trưởng phòng kinh doanh" />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="permission_level"
+                        label="Mức độ quyền hạn"
+                        rules={[{ required: true, message: 'Vui lòng chọn mức độ quyền hạn' }]}
+                    >
+                        <select
+                            className="w-full h-10 px-3 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="admin">Quản trị viên (Admin)</option>
+                            <option value="manager">Quản lý (Manager)</option>
+                            <option value="user">Nhân viên (User)</option>
+                        </select>
                     </Form.Item>
 
                     <Form.Item
