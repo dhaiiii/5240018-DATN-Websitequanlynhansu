@@ -49,7 +49,7 @@ export default function AccountsPage() {
 
     useEffect(() => {
         const level = getPermissionLevel();
-        if (level !== 'admin') {
+        if (level !== 'admin' && level !== 'manager') {
             message.error('Bạn không có quyền truy cập trang này');
             router.push('/dashboard');
             return;
@@ -223,12 +223,14 @@ export default function AccountsPage() {
                                             </span>
                                         </td>
                                         <td className="py-3 px-4">
-                                            <button
-                                                onClick={() => handleEdit(user)}
-                                                className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm font-medium"
-                                            >
-                                                Chỉnh sửa
-                                            </button>
+                                            {!(getPermissionLevel() === 'manager' && user.role === 'admin') && (
+                                                <button
+                                                    onClick={() => handleEdit(user)}
+                                                    className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm font-medium"
+                                                >
+                                                    Chỉnh sửa
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))
@@ -265,7 +267,9 @@ export default function AccountsPage() {
                         rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}
                     >
                         <Select>
-                            <Select.Option value="admin">Quản trị viên</Select.Option>
+                            {getPermissionLevel() === 'admin' && (
+                                <Select.Option value="admin">Quản trị viên</Select.Option>
+                            )}
                             <Select.Option value="manager">Quản lý</Select.Option>
                             <Select.Option value="user">Nhân viên</Select.Option>
                         </Select>

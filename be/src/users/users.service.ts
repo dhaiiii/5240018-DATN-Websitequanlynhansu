@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -19,8 +19,21 @@ export class UsersService {
     private rolesRepository: Repository<Role>,
   ) { }
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto, currentUser?: any) {
     const { email, departmentId, roleId, ...userData } = createUserDto;
+
+    // Check if manager is trying to create an admin
+    if (currentUser && currentUser.permission_level === 'manager') {
+      if (userData.role === 'admin') {
+        throw new ForbiddenException('Quản lý không được phép tạo tài khoản Quản trị viên');
+      }
+      if (roleId) {
+        const role = await this.rolesRepository.findOneBy({ id: roleId });
+        if (role && role.permission_level === 'admin') {
+          throw new ForbiddenException('Quản lý không được phép tạo tài khoản có quyền Quản trị viên');
+        }
+      }
+    }
 
     // Check if email already exists
     const existingUser = await this.usersRepository.findOneBy({ email });
@@ -80,9 +93,30 @@ export class UsersService {
     });
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, updateUserDto: UpdateUserDto, currentUser?: any) {
     const { departmentId, roleId, ...userData } = updateUserDto;
     const user = await this.findOne(id);
+
+    if (!user) return null;
+
+    // Check permissions for manager
+    if (currentUser && currentUser.permission_level === 'manager') {
+      // 1. Manager cannot modify an Admin user
+      if (user.role === 'admin' || (user.role_item && user.role_item.permission_level === 'admin')) {
+        throw new ForbiddenException('Quản lý không được phép sửa thông tin của Quản trị viên');
+      }
+
+      // 2. Manager cannot grant Admin role to anyone
+      if (userData.role === 'admin') {
+        throw new ForbiddenException('Quản lý không được phép cấp quyền Quản trị viên');
+      }
+      if (roleId) {
+        const role = await this.rolesRepository.findOneBy({ id: roleId });
+        if (role && role.permission_level === 'admin') {
+          throw new ForbiddenException('Quản lý không được phép cấp quyền Quản trị viên');
+        }
+      }
+    }
 
     if (!user) return null;
 
@@ -127,7 +161,16 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  remove(id: number) {
+  async remove(id: number, currentUser?: any) {
+    const user = await this.findOne(id);
+    if (!user) return null;
+
+    if (currentUser && currentUser.permission_level === 'manager') {
+      if (user.role === 'admin' || (user.role_item && user.role_item.permission_level === 'admin')) {
+        throw new ForbiddenException('Quản lý không được phép xóa tài khoản Quản trị viên');
+      }
+    }
+
     return this.usersRepository.delete(id);
   }
 }

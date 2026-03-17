@@ -1,5 +1,7 @@
 export const getPermissionLevel = (): string => {
     if (typeof window === 'undefined') return 'user';
+    const role = localStorage.getItem('userRole');
+    if (role === 'admin') return 'admin';
     return localStorage.getItem('permission_level') || 'user';
 };
 

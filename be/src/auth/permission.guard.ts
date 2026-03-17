@@ -42,7 +42,14 @@ export class PermissionGuard extends JwtAuthGuard implements CanActivate {
             [Permission.User]: 1,
         };
 
-        const userLevel = permissionHierarchy[userPermission] || 0;
+        let userLevel = permissionHierarchy[userPermission] || 0;
+
+        // Legacy role fallback: Ensure base 'admin' role always has highest permission
+        if (user.role === 'admin') {
+            userLevel = Math.max(userLevel, 3);
+        } else if (user.role === 'manager') {
+            userLevel = Math.max(userLevel, 2);
+        }
 
         console.log('PermissionGuard - userPermission:', userPermission);
         console.log('PermissionGuard - userLevel:', userLevel);

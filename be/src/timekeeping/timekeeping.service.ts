@@ -12,6 +12,9 @@ export class TimekeepingService {
     ) { }
 
     async create(createTimekeepingDto: CreateTimekeepingDto) {
+        if (!createTimekeepingDto.email) {
+            return null; // Ignore invalid requests without an email
+        }
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
@@ -42,8 +45,9 @@ export class TimekeepingService {
     }
 
     async findAll() {
-        return await this.timekeepingRepository.find({
+        const records = await this.timekeepingRepository.find({
             order: { start_time: 'DESC' },
         });
+        return records.filter(record => record.email && record.email.trim() !== '');
     }
 }

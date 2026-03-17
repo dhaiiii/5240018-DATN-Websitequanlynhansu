@@ -18,7 +18,7 @@ import {
     IdcardOutlined,
     FileTextOutlined,
 } from '@ant-design/icons';
-import { isAdmin } from '@/lib/utils/auth.utils';
+import { isAdmin, isManager, isUser } from '@/lib/utils/auth.utils';
 import { getAvatarUrl } from '@/lib/utils/image.utils';
 
 const { Header, Sider, Content } = Layout;
@@ -103,12 +103,14 @@ export default function DashboardLayout({
     }, [router]);
 
     useEffect(() => {
-        const permissionLevel = localStorage.getItem('permission_level') || 'user';
-        const userRole = localStorage.getItem('userRole') || 'user';
+        const canViewAdminOnly = isAdmin() || isManager();
 
-        const filtered = allMenuItems.filter(item =>
-            item.roles.includes(permissionLevel) || item.roles.includes(userRole)
-        );
+        const filtered = allMenuItems.filter(item => {
+            if (item.roles.includes('admin') && item.roles.length === 1) {
+                return canViewAdminOnly;
+            }
+            return true; // if it includes 'user', everyone can see it
+        });
         setMenuItems(filtered);
 
 

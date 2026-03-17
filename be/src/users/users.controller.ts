@@ -44,9 +44,9 @@ export class UsersController {
 
 
   @Post()
-  @RequirePermission(Permission.Admin)
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @RequirePermission(Permission.Manager) // Cho phép cả Manager và Admin
+  create(@CurrentUser() currentUser: any, @Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto, currentUser);
   }
 
   @Get()
@@ -62,14 +62,14 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @RequirePermission(Permission.Admin)
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @RequirePermission(Permission.Manager) // Cho phép cả Manager và Admin
+  update(@CurrentUser() currentUser: any, @Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(+id, updateUserDto, currentUser);
   }
 
   @Delete(':id')
-  @RequirePermission(Permission.Admin)
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @RequirePermission(Permission.Manager) // Cho phép cả Manager và Admin
+  remove(@CurrentUser() currentUser: any, @Param('id') id: string) {
+    return this.usersService.remove(+id, currentUser);
   }
 }
