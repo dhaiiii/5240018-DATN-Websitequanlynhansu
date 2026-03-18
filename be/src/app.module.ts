@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { TimekeepingModule } from './timekeeping/timekeeping.module';
 import { RequestsModule } from './requests/requests.module';
+import { SettingsModule } from './settings/settings.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
@@ -34,6 +35,7 @@ import { join } from 'path';
     DepartmentsModule,
     TimekeepingModule,
     RequestsModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

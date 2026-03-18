@@ -46,7 +46,7 @@ export class TimekeepingService {
 
     async findAll() {
         const records = await this.timekeepingRepository.find({
-            order: { start_time: 'DESC' },
+            order: { created_at: 'DESC' },
         });
         return records.filter(record => record.email && record.email.trim() !== '');
     }
