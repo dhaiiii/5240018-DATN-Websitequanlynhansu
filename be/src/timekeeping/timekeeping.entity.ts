@@ -15,6 +15,12 @@ export class Timekeeping {
     @Column({ type: 'time', nullable: true })
     end_time: string | null;
 
+    @Column({ type: 'time', nullable: true })
+    expected_start_time: string | null;
+
+    @Column({ type: 'time', nullable: true })
+    expected_end_time: string | null;
+
     @ManyToOne(() => WorkingHours, { nullable: true })
     @JoinColumn({ name: 'working_hours_id' })
     workingHours: WorkingHours;

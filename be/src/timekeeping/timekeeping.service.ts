@@ -44,6 +44,8 @@ export class TimekeepingService {
             email: createTimekeepingDto.email,
             start_time: createTimekeepingDto.start_time || new Date().toLocaleTimeString('en-GB'),
             end_time: createTimekeepingDto.end_time || null,
+            expected_start_time: activeConfig?.startTime || '08:00',
+            expected_end_time: activeConfig?.endTime || '17:00',
             workingHours: (activeConfig && activeConfig.id > 0) ? activeConfig : undefined,
         });
 
@@ -78,19 +80,20 @@ export class TimekeepingService {
         const processedRecords = records
             .filter(record => record.email && record.email.trim() !== '')
             .map(record => {
-                const config = record.workingHours || { startTime: '08:00', endTime: '17:00' };
+                const expectedStart = record.expected_start_time || '08:00';
+                const expectedEnd = record.expected_end_time || '17:00';
                 let attendanceStatus = 'Thiếu công';
 
                 if (record.start_time && record.end_time) {
-                    const isLate = record.start_time > config.startTime;
-                    const isEarly = record.end_time < config.endTime;
+                    const isLate = record.start_time > expectedStart;
+                    const isEarly = record.end_time < expectedEnd;
 
                     if (isLate && isEarly) attendanceStatus = 'Muộn & Về sớm';
                     else if (isLate) attendanceStatus = 'Đi muộn';
                     else if (isEarly) attendanceStatus = 'Về sớm';
                     else attendanceStatus = 'Đủ giờ công';
                 } else if (record.start_time) {
-                    const isLate = record.start_time > config.startTime;
+                    const isLate = record.start_time > expectedStart;
                     attendanceStatus = isLate ? 'Đi muộn (Chưa về)' : 'Đang làm việc';
                 }
 
