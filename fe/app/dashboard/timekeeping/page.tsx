@@ -1,7 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api/api-client';
+import { Input, Select, DatePicker, Button, Space } from 'antd';
+import { SearchOutlined, ReloadOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
+
+const { Option } = Select;
 
 interface Timekeeping {
     id: number;
@@ -14,10 +19,22 @@ interface Timekeeping {
 export default function TimekeepingPage() {
     const [data, setData] = useState<Timekeeping[]>([]);
     const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState({
+        name: '',
+        date: '',
+        status: '',
+    });
+    const [searchTerm, setSearchTerm] = useState('');
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
+        setLoading(true);
         try {
-            const response = await apiClient.get('/timekeeping');
+            const params = new URLSearchParams();
+            if (filters.name) params.append('name', filters.name);
+            if (filters.date) params.append('date', filters.date);
+            if (filters.status) params.append('status', filters.status);
+
+            const response = await apiClient.get(`/timekeeping?${params.toString()}`);
             const result = await response.json();
             setData(result);
         } catch (error) {
@@ -25,11 +42,28 @@ export default function TimekeepingPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters]);
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [fetchData]);
+
+    // Search debounce
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setFilters(prev => ({ ...prev, name: searchTerm }));
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
+
+    const handleReset = () => {
+        setSearchTerm('');
+        setFilters({
+            name: '',
+            date: '',
+            status: '',
+        });
+    };
 
     const formatTime = (timeStr: string | null) => {
         if (!timeStr) return '-';
@@ -58,14 +92,42 @@ export default function TimekeepingPage() {
                 </div>
             </div>
             <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-700 p-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Chi tiết chấm công</h3>
-                    <button
-                        onClick={fetchData}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
-                    >
-                        Làm mới
-                    </button>
+                <div className="flex items-center justify-between mb-6">
+                    <div className="w-[120px]">
+                        <Input
+                            placeholder="Email..."
+                            prefix={<SearchOutlined className="text-gray-400" />}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full"
+                            allowClear
+                        />
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <DatePicker
+                            placeholder="Chọn ngày"
+                            onChange={(date) => setFilters(prev => ({ ...prev, date: date ? date.format('YYYY-MM-DD') : '' }))}
+                            value={filters.date ? dayjs(filters.date) : null}
+                            className="w-40 min-w-[150px]"
+                        />
+                        <Select
+                            placeholder="Trạng thái"
+                            value={filters.status || undefined}
+                            onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+                            className="w-40 min-w-[150px]"
+                            allowClear
+                        >
+                            <Option value="full">Đủ công</Option>
+                            <Option value="incomplete">Thiếu công</Option>
+                        </Select>
+                        <Button
+                            icon={<ReloadOutlined />}
+                            onClick={handleReset}
+                            className="hover:text-blue-500 whitespace-nowrap"
+                        >
+                            Làm mới
+                        </Button>
+                    </div>
                 </div>
                 <div className="overflow-x-auto">
                     {loading ? (

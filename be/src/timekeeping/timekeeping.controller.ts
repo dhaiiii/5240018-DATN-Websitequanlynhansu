@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query } from '@nestjs/common';
 import { TimekeepingService } from './timekeeping.service';
 import { CreateTimekeepingDto } from './create-timekeeping.dto';
 
@@ -12,7 +12,11 @@ export class TimekeepingController {
     }
 
     @Get()
-    findAll() {
-        return this.timekeepingService.findAll();
+    findAll(
+        @Query('name') name?: string,
+        @Query('date') date?: string,
+        @Query('status') status?: string,
+    ) {
+        return this.timekeepingService.findAll({ name, date, status });
     }
 }

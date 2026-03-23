@@ -44,10 +44,28 @@ export class TimekeepingService {
         return await this.timekeepingRepository.save(timekeeping);
     }
 
-    async findAll() {
-        const records = await this.timekeepingRepository.find({
-            order: { created_at: 'DESC' },
-        });
+    async findAll(filters: { name?: string, date?: string, status?: string }) {
+        const queryBuilder = this.timekeepingRepository.createQueryBuilder('timekeeping');
+
+        if (filters.name) {
+            queryBuilder.andWhere('timekeeping.email ILIKE :name', { name: `%${filters.name}%` });
+        }
+
+        if (filters.date) {
+            queryBuilder.andWhere('CAST(timekeeping.created_at AS DATE) = :date', { date: filters.date });
+        }
+
+        if (filters.status) {
+            if (filters.status === 'full') {
+                queryBuilder.andWhere('timekeeping.end_time IS NOT NULL');
+            } else if (filters.status === 'incomplete') {
+                queryBuilder.andWhere('timekeeping.end_time IS NULL');
+            }
+        }
+
+        queryBuilder.orderBy('timekeeping.created_at', 'DESC');
+
+        const records = await queryBuilder.getMany();
         return records.filter(record => record.email && record.email.trim() !== '');
     }
 }

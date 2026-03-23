@@ -164,7 +164,7 @@ export default function DashboardLayout({
 
 
     return (
-        <Layout style={{ minHeight: '100vh' }}>
+        <Layout style={{ height: '100vh', overflow: 'hidden' }}>
             <Sider trigger={null} collapsible collapsed={collapsed} theme="light">
                 <div className="h-16 flex items-center justify-center border-b border-gray-100">
                     <h1 className={`font-bold bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent duration-200 ${collapsed ? 'text-xs' : 'text-xl'}`}>
@@ -211,9 +211,9 @@ export default function DashboardLayout({
                     style={{
                         margin: '24px 16px',
                         padding: 24,
-                        minHeight: 280,
                         background: colorBgContainer,
                         borderRadius: borderRadiusLG,
+                        overflowY: 'auto',
                     }}
                 >
                     {children}
