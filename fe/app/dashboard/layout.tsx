@@ -17,6 +17,7 @@ import {
     DownOutlined,
     IdcardOutlined,
     FileTextOutlined,
+    SettingOutlined,
 } from '@ant-design/icons';
 import { isAdmin, isManager, isUser } from '@/lib/utils/auth.utils';
 import { getAvatarUrl } from '@/lib/utils/image.utils';
@@ -77,6 +78,18 @@ const allMenuItems = [
         icon: <SolutionOutlined />,
         label: <Link href="/dashboard/accounts">Tài khoản</Link>,
         roles: ['admin'],
+    },
+    {
+        key: '/dashboard/settings',
+        icon: <SettingOutlined />,
+        label: 'Cài đặt',
+        roles: ['admin'],
+        children: [
+            {
+                key: '/dashboard/settings/working-hours',
+                label: <Link href="/dashboard/settings/working-hours">Giờ làm việc</Link>,
+            },
+        ]
     },
 ];
 
@@ -148,7 +161,7 @@ export default function DashboardLayout({
             },
             {
                 key: 'settings',
-                label: 'Cài đặt',
+                label: <Link href="/dashboard/settings">Cài đặt</Link>,
             },
             {
                 type: 'divider',

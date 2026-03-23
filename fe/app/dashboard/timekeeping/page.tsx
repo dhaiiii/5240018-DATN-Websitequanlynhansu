@@ -14,6 +14,11 @@ interface Timekeeping {
     start_time: string;
     end_time: string | null;
     created_at: string;
+    workingHours?: {
+        startTime: string;
+        endTime: string;
+    };
+    attendanceStatus?: string;
 }
 
 export default function TimekeepingPage() {
@@ -142,6 +147,7 @@ export default function TimekeepingPage() {
                                     <th className="text-left py-3 px-4 font-semibold">Vào</th>
                                     <th className="text-left py-3 px-4 font-semibold">Ra</th>
                                     <th className="text-left py-3 px-4 font-semibold">Ngày</th>
+                                    <th className="text-left py-3 px-4 font-semibold">Cấu hình</th> {/* New column header */}
                                     <th className="text-left py-3 px-4 font-semibold text-right">Trạng thái</th>
                                 </tr>
                             </thead>
@@ -155,16 +161,35 @@ export default function TimekeepingPage() {
                                             <td className="py-3 px-4 text-gray-500">
                                                 {new Date(item.created_at).toLocaleDateString('vi-VN')}
                                             </td>
+                                            <td className="py-3 px-4">
+                                                {item.workingHours ? (
+                                                    <span className="text-xs bg-gray-50 text-gray-500 px-2 py-1 rounded border border-gray-100 dark:bg-zinc-700 dark:text-zinc-300 dark:border-zinc-600">
+                                                        {item.workingHours.startTime} - {item.workingHours.endTime}
+                                                    </span>
+                                                ) : '-'}
+                                            </td>
                                             <td className="py-3 px-4 text-right">
-                                                <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 rounded text-xs font-semibold">
-                                                    Đã lưu
-                                                </span>
+                                                {(() => {
+                                                    const status = item.attendanceStatus || 'Thiếu công';
+                                                    let colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-200'; // Default
+
+                                                    if (status === 'Đủ giờ công') colorClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+                                                    else if (status.includes('muộn') || status.includes('sớm')) colorClass = 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+                                                    else if (status === 'Đang làm việc') colorClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+                                                    else if (status === 'Muộn & Về sớm' || status === 'Thiếu công') colorClass = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+
+                                                    return (
+                                                        <span className={`px-2 py-1 rounded text-xs font-semibold ${colorClass}`}>
+                                                            {status}
+                                                        </span>
+                                                    );
+                                                })()}
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={5} className="py-12 text-center text-gray-500">
+                                        <td colSpan={6} className="py-12 text-center text-gray-500">
                                             Chưa có dữ liệu chấm công nào.
                                         </td>
                                     </tr>

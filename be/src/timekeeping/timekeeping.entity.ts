@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn, JoinColumn } from 'typeorm';
+import { WorkingHours } from '../working-hours/working-hours.entity';
 
 @Entity('timekeeping')
 export class Timekeeping {
@@ -13,6 +14,10 @@ export class Timekeeping {
 
     @Column({ type: 'time', nullable: true })
     end_time: string | null;
+
+    @ManyToOne(() => WorkingHours, { nullable: true })
+    @JoinColumn({ name: 'working_hours_id' })
+    workingHours: WorkingHours;
 
     @CreateDateColumn({ type: 'timestamp' })
     created_at: Date;
