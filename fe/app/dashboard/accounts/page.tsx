@@ -149,9 +149,15 @@ export default function AccountsPage() {
                     if (response.ok) {
                         message.success('Đã đặt lại mật khẩu thành 123456');
                     } else {
-                        message.error('Đặt lại mật khẩu thất bại');
+                        const errorData = await response.json().catch(() => ({}));
+                        const errMsg = Array.isArray(errorData.message)
+                            ? errorData.message.join(', ')
+                            : errorData.message || `Lỗi ${response.status}`;
+                        console.error('Reset password error:', errorData);
+                        message.error(`Đặt lại mật khẩu thất bại: ${errMsg}`);
                     }
                 } catch (error) {
+                    console.error('Reset password exception:', error);
                     message.error('Lỗi khi đặt lại mật khẩu');
                 }
             }

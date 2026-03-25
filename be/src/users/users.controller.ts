@@ -23,8 +23,13 @@ export class UsersController {
   @Patch('me')
   updateMe(@CurrentUser() user: any, @Body() updateUserDto: UpdateUserDto) {
     // Only allow updating certain fields for security
-    const { first_name, last_name, phone, address, gender, birth_date } = updateUserDto;
-    return this.usersService.update(user.userId, { first_name, last_name, phone, address, gender, birth_date });
+    const { first_name, last_name, phone, address, gender, birth_date, password } = updateUserDto;
+    return this.usersService.update(user.userId, { first_name, last_name, phone, address, gender, birth_date, password });
+  }
+
+  @Patch('me/change-password')
+  changeMyPassword(@CurrentUser() user: any, @Body() body: { password: string }) {
+    return this.usersService.update(user.userId, { password: body.password });
   }
 
   @Post('avatar')

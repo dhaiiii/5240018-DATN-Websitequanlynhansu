@@ -64,20 +64,12 @@ export class TimekeepingService {
             queryBuilder.andWhere('CAST(timekeeping.created_at AS DATE) = :date', { date: filters.date });
         }
 
-        if (filters.status) {
-            if (filters.status === 'full') {
-                queryBuilder.andWhere('timekeeping.end_time IS NOT NULL');
-            } else if (filters.status === 'incomplete') {
-                queryBuilder.andWhere('timekeeping.end_time IS NULL');
-            }
-        }
-
         queryBuilder.orderBy('timekeeping.created_at', 'DESC');
 
         const records = await queryBuilder.getMany();
 
         // Filter and calculate status details
-        const processedRecords = records
+        let processedRecords = records
             .filter(record => record.email && record.email.trim() !== '')
             .map(record => {
                 const expectedStart = record.expected_start_time || '08:00';
@@ -102,6 +94,15 @@ export class TimekeepingService {
                     attendanceStatus,
                 };
             });
+
+        // Apply status filter after calculation
+        if (filters.status) {
+            if (filters.status === 'full') {
+                processedRecords = processedRecords.filter(r => r.attendanceStatus === 'Đủ giờ công');
+            } else if (filters.status === 'incomplete') {
+                processedRecords = processedRecords.filter(r => r.attendanceStatus !== 'Đủ giờ công');
+            }
+        }
 
         return processedRecords;
     }

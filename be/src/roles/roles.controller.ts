@@ -18,6 +18,7 @@ export class RolesController {
     }
 
     @Get()
+    @RequirePermission(Permission.Manager) // Allow managers to see roles too
     findAll() {
         return this.rolesService.findAll();
     }

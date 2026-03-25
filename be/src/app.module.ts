@@ -10,6 +10,7 @@ import { TimekeepingModule } from './timekeeping/timekeeping.module';
 import { RequestsModule } from './requests/requests.module';
 import { SettingsModule } from './settings/settings.module';
 import { WorkingHoursModule } from './working-hours/working-hours.module';
+import { StatisticsModule } from './statistics/statistics.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
@@ -38,6 +39,7 @@ import { join } from 'path';
     RequestsModule,
     SettingsModule,
     WorkingHoursModule,
+    StatisticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
