@@ -52,9 +52,14 @@ export class TimekeepingService {
         return await this.timekeepingRepository.save(timekeeping);
     }
 
-    async findAll(filters: { name?: string, date?: string, status?: string }) {
+    async findAll(filters: { name?: string, date?: string, status?: string }, user?: any) {
         const queryBuilder = this.timekeepingRepository.createQueryBuilder('timekeeping')
             .leftJoinAndSelect('timekeeping.workingHours', 'workingHours');
+
+        // Filter by user email if not admin or manager
+        if (user && user.role !== 'admin' && user.role !== 'manager' && user.permission_level !== 'admin' && user.permission_level !== 'manager') {
+            queryBuilder.andWhere('timekeeping.email = :email', { email: user.email });
+        }
 
         if (filters.name) {
             queryBuilder.andWhere('timekeeping.email ILIKE :name', { name: `%${filters.name}%` });

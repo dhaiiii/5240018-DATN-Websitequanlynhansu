@@ -5,6 +5,7 @@ import { apiClient } from '@/lib/api/api-client';
 import { Input, Select, DatePicker, Button, Space } from 'antd';
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { isAdmin, isManager } from '@/lib/utils/auth.utils';
 
 const { Option } = Select;
 
@@ -24,6 +25,7 @@ interface Timekeeping {
 export default function TimekeepingPage() {
     const [data, setData] = useState<Timekeeping[]>([]);
     const [loading, setLoading] = useState(true);
+    const [canViewAll, setCanViewAll] = useState(false);
     const [filters, setFilters] = useState({
         name: '',
         date: '',
@@ -51,6 +53,7 @@ export default function TimekeepingPage() {
 
     useEffect(() => {
         fetchData();
+        setCanViewAll(isAdmin() || isManager());
     }, [fetchData]);
 
     // Search debounce
@@ -98,16 +101,18 @@ export default function TimekeepingPage() {
             </div>
             <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-700 p-6">
                 <div className="flex items-center justify-between mb-6">
-                    <div className="w-[120px]">
-                        <Input
-                            placeholder="Email..."
-                            prefix={<SearchOutlined className="text-gray-400" />}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full"
-                            allowClear
-                        />
-                    </div>
+                    {canViewAll && (
+                        <div className="w-[120px]">
+                            <Input
+                                placeholder="Email..."
+                                prefix={<SearchOutlined className="text-gray-400" />}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full"
+                                allowClear
+                            />
+                        </div>
+                    )}
                     <div className="flex items-center gap-3">
                         <DatePicker
                             placeholder="Chọn ngày"
