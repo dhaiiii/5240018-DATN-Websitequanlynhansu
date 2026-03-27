@@ -177,7 +177,7 @@ export default function DashboardPage() {
             'OVERTIME': 'Làm thêm giờ',
             'BUSINESS_TRIP': 'Công tác',
             'RESIGNATION': 'Thôi việc',
-            'ATTENDANCE_ADJUSTMENT': 'Điều chỉnh công'
+            'ATTENDANCE_ADJUSTMENT': 'Cập nhật công'
         };
         return labels[type] || type;
     };

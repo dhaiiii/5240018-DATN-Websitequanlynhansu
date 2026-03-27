@@ -50,7 +50,7 @@ const typeLabels: Record<string, string> = {
     [RequestType.OVERTIME]: 'Tăng ca',
     [RequestType.BUSINESS_TRIP]: 'Công tác',
     [RequestType.RESIGNATION]: 'Thôi việc',
-    [RequestType.ATTENDANCE_ADJUSTMENT]: 'Điều chỉnh chấm công',
+    [RequestType.ATTENDANCE_ADJUSTMENT]: 'Cập nhật công',
 };
 
 const statusConfig: Record<string, { color: string, icon: React.ReactNode, label: string }> = {
@@ -303,7 +303,7 @@ export default function RequestsPage() {
                             <Select.Option value={RequestType.UNPAID_LEAVE}>Nghỉ phép không lương</Select.Option>
                             <Select.Option value={RequestType.OVERTIME}>Tăng ca</Select.Option>
                             <Select.Option value={RequestType.BUSINESS_TRIP}>Công tác</Select.Option>
-                            <Select.Option value={RequestType.ATTENDANCE_ADJUSTMENT}>Điều chỉnh chấm công</Select.Option>
+                            <Select.Option value={RequestType.ATTENDANCE_ADJUSTMENT}>Cập nhật công</Select.Option>
                         </Select>
                     </Form.Item>
 
