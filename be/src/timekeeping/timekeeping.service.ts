@@ -195,6 +195,7 @@ export class TimekeepingService {
                         expected_end_time: '17:00',
                         created_at: hrDate,
                         workingHours: undefined as any,
+                        user: undefined as any,
                         attendanceStatus: status
                     });
                     recordMap.add(dateKey); // Prevent duplicate virtual records if multiple requests overlap

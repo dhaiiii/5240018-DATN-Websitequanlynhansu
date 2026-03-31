@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn, JoinColumn } from 'typeorm';
 import { WorkingHours } from '../working-hours/working-hours.entity';
+import { User } from '../users/entities/user.entity';
 
 @Entity('timekeeping')
 export class Timekeeping {
@@ -8,6 +9,10 @@ export class Timekeeping {
 
     @Column({ default: '' })
     email: string;
+
+    @ManyToOne(() => User)
+    @JoinColumn({ name: 'email', referencedColumnName: 'email' })
+    user: User;
 
     @Column({ type: 'time', default: () => 'CURRENT_TIME' })
     start_time: string;

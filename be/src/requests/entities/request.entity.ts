@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { RequestType, RequestStatus } from '../enums/request-type.enum';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('requests')
 export class Request {
@@ -8,6 +9,10 @@ export class Request {
 
     @Column()
     email: string;
+
+    @ManyToOne(() => User)
+    @JoinColumn({ name: 'email', referencedColumnName: 'email' })
+    user: User;
 
     @Column({
         type: 'enum',
