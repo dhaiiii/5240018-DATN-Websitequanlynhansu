@@ -12,6 +12,7 @@ import { SettingsModule } from './settings/settings.module';
 import { WorkingHoursModule } from './working-hours/working-hours.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { MeetingSchedulerModule } from './meeting-scheduler/meeting-scheduler.module';
 import { join } from 'path';
 
 @Module({
@@ -40,6 +41,7 @@ import { join } from 'path';
     SettingsModule,
     WorkingHoursModule,
     StatisticsModule,
+    MeetingSchedulerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

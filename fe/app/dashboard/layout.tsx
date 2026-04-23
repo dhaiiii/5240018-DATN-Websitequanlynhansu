@@ -18,6 +18,7 @@ import {
     IdcardOutlined,
     FileTextOutlined,
     SettingOutlined,
+    CalendarOutlined,
 } from '@ant-design/icons';
 import { isAdmin, isManager, isUser } from '@/lib/utils/auth.utils';
 import { getAvatarUrl } from '@/lib/utils/image.utils';
@@ -72,6 +73,12 @@ const allMenuItems = [
         icon: <BarChartOutlined />,
         label: <Link href="/dashboard/statistics">Thống kê</Link>,
         roles: ['admin'],
+    },
+    {
+        key: '/dashboard/meeting-scheduler',
+        icon: <CalendarOutlined />,
+        label: <Link href="/dashboard/meeting-scheduler">Lịch họp</Link>,
+        roles: ['admin', 'user'],
     },
     {
         key: '/dashboard/accounts',
