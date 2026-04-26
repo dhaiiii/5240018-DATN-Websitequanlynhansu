@@ -22,6 +22,7 @@ import {
 } from '@ant-design/icons';
 import { isAdmin, isManager, isUser } from '@/lib/utils/auth.utils';
 import { getAvatarUrl } from '@/lib/utils/image.utils';
+import NotificationsBell from '@/components/layout/NotificationsBell';
 
 const { Header, Sider, Content } = Layout;
 
@@ -209,6 +210,7 @@ export default function DashboardLayout({
                     </div>
 
                     <div className="flex items-center gap-4">
+                        <NotificationsBell />
                         <Dropdown menu={userMenu as any} trigger={['click']}>
                             <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors">
                                 <Avatar

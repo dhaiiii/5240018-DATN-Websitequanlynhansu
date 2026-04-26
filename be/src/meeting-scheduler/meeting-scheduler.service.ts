@@ -5,6 +5,7 @@ import { Meeting } from './entities/meeting.entity';
 import { Room } from './entities/room.entity';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
 import { User } from '../users/entities/user.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class MeetingSchedulerService implements OnModuleInit {
@@ -12,6 +13,7 @@ export class MeetingSchedulerService implements OnModuleInit {
         private dataSource: DataSource,
         @InjectRepository(User)
         private userRepository: Repository<User>,
+        private notificationsService: NotificationsService,
     ) { }
 
     async onModuleInit() {
@@ -137,11 +139,29 @@ export class MeetingSchedulerService implements OnModuleInit {
             });
             const saved = await manager.save(newMeeting);
 
-            // Trả về kèm thông tin phòng
-            return await manager.findOne(Meeting, {
+            const savedMeeting = await manager.findOne(Meeting, {
                 where: { id: saved.id },
                 relations: ['room'],
             });
+
+            // 5. Gửi thông báo cho những người tham gia (organizer array)
+            if (savedMeeting && organizer && organizer.length > 0) {
+                const formattedStartTime = savedMeeting.start_time.toLocaleString('vi-VN');
+                const notificationPromises = organizer.map(org =>
+                    this.notificationsService.notifyMeetingInvite(
+                        org.email,
+                        savedMeeting.title,
+                        savedMeeting.room.name,
+                        formattedStartTime
+                    )
+                );
+                await Promise.all(notificationPromises).catch(err => {
+                    console.error('Lỗi khi gửi thông báo lịch họp:', err);
+                });
+            }
+
+            // Trả về kèm thông tin phòng
+            return savedMeeting;
         });
     }
 

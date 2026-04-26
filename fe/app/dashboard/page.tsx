@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Statistic, Typography, List, Avatar, Tag, message, Button } from 'antd';
+import { Card, Col, Row, Statistic, Typography, List, Avatar, Tag, message, Button, notification } from 'antd';
 import {
     UserOutlined,
     ApartmentOutlined,
@@ -11,7 +11,9 @@ import {
     LoginOutlined,
     LogoutOutlined,
     EnvironmentOutlined,
-    SettingOutlined
+    SettingOutlined,
+    CheckCircleFilled,
+    CalendarOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -311,11 +313,40 @@ export default function DashboardPage() {
                     });
 
                     if (res.ok) {
-                        message.success(`Đã ${type === 'in' ? 'check-in' : 'check-out'} thành công lúc ${now}`);
+                        const isIn = type === 'in';
+                        const today = new Date().toLocaleDateString('vi-VN', {
+                            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                        });
+                        notification.success({
+                            message: isIn ? '✅ Chấm công vào ca thành công!' : '✅ Chấm công tan ca thành công!',
+                            description: (
+                                <div style={{ lineHeight: '1.8' }}>
+                                    <div><CalendarOutlined style={{ marginRight: 6, color: '#1890ff' }} />{today}</div>
+                                    <div><ClockCircleOutlined style={{ marginRight: 6, color: isIn ? '#52c41a' : '#ff4d4f' }} />
+                                        {isIn ? 'Giờ vào: ' : 'Giờ ra: '}<strong>{now}</strong>
+                                    </div>
+                                    <div style={{ marginTop: 4, color: '#8c8c8c', fontSize: 12 }}>
+                                        {isIn ? 'Chúc bạn có một ngày làm việc hiệu quả! 💪' : 'Hẹn gặp lại bạn vào ngày mai! 👋'}
+                                    </div>
+                                </div>
+                            ),
+                            placement: 'topRight',
+                            duration: 5,
+                            style: {
+                                borderLeft: `4px solid ${isIn ? '#52c41a' : '#ff4d4f'}`,
+                                borderRadius: 8,
+                            }
+                        });
                         if (type === 'in') setHasCheckedIn(true);
                         if (type === 'out') setHasCheckedOut(true);
                     } else {
-                        message.error(`Thao tác ${type === 'in' ? 'check-in' : 'check-out'} thất bại`);
+                        const errData = await res.json().catch(() => ({}));
+                        notification.error({
+                            message: `Chấm công thất bại`,
+                            description: errData?.message || `Không thể thực hiện thao tác ${type === 'in' ? 'vào ca' : 'tan ca'}. Vui lòng thử lại.`,
+                            placement: 'topRight',
+                            duration: 5,
+                        });
                     }
                 } catch (err) {
                     console.error('Lỗi khi chấm công:', err);

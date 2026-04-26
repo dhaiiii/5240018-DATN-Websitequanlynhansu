@@ -6,6 +6,7 @@ import { CreateTimekeepingDto } from './create-timekeeping.dto';
 import { WorkingHoursService } from '../working-hours/working-hours.service';
 import { Request } from '../requests/entities/request.entity';
 import { RequestType, RequestStatus } from '../requests/enums/request-type.enum';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class TimekeepingService {
@@ -15,6 +16,7 @@ export class TimekeepingService {
         @InjectRepository(Request)
         private requestRepository: Repository<Request>,
         private workingHoursService: WorkingHoursService,
+        private notificationsService: NotificationsService,
     ) { }
 
     async create(createTimekeepingDto: CreateTimekeepingDto) {
@@ -38,9 +40,12 @@ export class TimekeepingService {
         });
 
         if (existingRecord) {
-            // Update existing record's end_time
+            // Update existing record's end_time (check-out)
             existingRecord.end_time = createTimekeepingDto.end_time || new Date().toLocaleTimeString('en-GB');
-            return await this.timekeepingRepository.save(existingRecord);
+            const saved = await this.timekeepingRepository.save(existingRecord);
+            // Gửi thông báo tan ca
+            await this.notificationsService.notifyCheckOut(existingRecord.email, existingRecord.end_time);
+            return saved;
         }
 
         // Create new record for today
@@ -53,7 +58,13 @@ export class TimekeepingService {
             workingHours: (activeConfig && activeConfig.id > 0) ? activeConfig : undefined,
         });
 
-        return await this.timekeepingRepository.save(timekeeping);
+        const saved = await this.timekeepingRepository.save(timekeeping);
+        // Gửi thông báo vào ca
+        await this.notificationsService.notifyCheckIn(
+            createTimekeepingDto.email,
+            saved.start_time,
+        );
+        return saved;
     }
 
     async findAll(filters: { name?: string, date?: string, status?: string }, user?: any) {

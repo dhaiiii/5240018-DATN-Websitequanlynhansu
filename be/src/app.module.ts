@@ -13,6 +13,7 @@ import { WorkingHoursModule } from './working-hours/working-hours.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { MeetingSchedulerModule } from './meeting-scheduler/meeting-scheduler.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { join } from 'path';
 
 @Module({
@@ -42,6 +43,7 @@ import { join } from 'path';
     WorkingHoursModule,
     StatisticsModule,
     MeetingSchedulerModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
