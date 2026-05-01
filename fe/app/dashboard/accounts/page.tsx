@@ -2,9 +2,23 @@
 
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api/api-client';
-import { Modal, Form, Input, Select, message, Button, Space } from 'antd';
+import { Modal, Form, Input, Select, message, Button, Space, Descriptions, Tag, Typography } from 'antd';
+import { EditOutlined, DeleteOutlined, EyeOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { getPermissionLevel } from '@/lib/utils/auth.utils';
 import { useRouter } from 'next/navigation';
+
+const { Text } = Typography;
+
+interface Department {
+    id: number;
+    name: string;
+}
+
+interface RoleItem {
+    id: number;
+    role_name: string;
+    permission_level: string;
+}
 
 interface User {
     id: number;
@@ -13,6 +27,12 @@ interface User {
     email: string;
     is_active: boolean;
     role: string;
+    phone?: string;
+    address?: string;
+    gender?: string;
+    birth_date?: string;
+    department?: Department;
+    role_item?: RoleItem;
 }
 
 export default function AccountsPage() {
@@ -21,7 +41,13 @@ export default function AccountsPage() {
     const [error, setError] = useState<string | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [viewingUser, setViewingUser] = useState<User | null>(null);
+
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [roles, setRoles] = useState<RoleItem[]>([]);
+
     const [form] = Form.useForm();
     const [createForm] = Form.useForm();
     const [submitting, setSubmitting] = useState(false);
@@ -47,6 +73,19 @@ export default function AccountsPage() {
         }
     };
 
+    const fetchDeptsAndRoles = async () => {
+        try {
+            const [deptRes, roleRes] = await Promise.all([
+                apiClient.get('/departments'),
+                apiClient.get('/roles')
+            ]);
+            if (deptRes.ok) setDepartments(await deptRes.json());
+            if (roleRes.ok) setRoles(await roleRes.json());
+        } catch (error) {
+            console.error('Failed to fetch depts/roles:', error);
+        }
+    };
+
     useEffect(() => {
         const level = getPermissionLevel();
         if (level !== 'admin' && level !== 'manager') {
@@ -55,6 +94,7 @@ export default function AccountsPage() {
             return;
         }
         fetchUsers();
+        fetchDeptsAndRoles();
     }, [router]);
 
     const handleEdit = (user: User) => {
@@ -62,8 +102,41 @@ export default function AccountsPage() {
         form.setFieldsValue({
             full_name: `${user.first_name} ${user.last_name}`,
             role: user.role,
+            departmentId: user.department?.id,
+            roleId: user.role_item?.id,
+            is_active: user.is_active
         });
         setIsEditModalOpen(true);
+    };
+
+    const handleView = (user: User) => {
+        setViewingUser(user);
+        setIsViewModalOpen(true);
+    };
+
+    const handleDelete = (user: User) => {
+        Modal.confirm({
+            title: 'Xác nhận xóa tài khoản',
+            icon: <ExclamationCircleOutlined />,
+            content: `Bạn có chắc chắn muốn xóa tài khoản "${user.first_name} ${user.last_name}"? Hành động này không thể hoàn tác.`,
+            okText: 'Xóa',
+            okType: 'danger',
+            cancelText: 'Hủy',
+            onOk: async () => {
+                try {
+                    const response = await apiClient.delete(`/users/${user.id}`);
+                    if (response.ok) {
+                        message.success('Đã xóa tài khoản thành công');
+                        fetchUsers();
+                    } else {
+                        const errorData = await response.json().catch(() => ({}));
+                        message.error(errorData.message || 'Xóa tài khoản thất bại');
+                    }
+                } catch (error) {
+                    message.error('Lỗi khi xóa tài khoản');
+                }
+            },
+        });
     };
 
     const handleCreate = async (values: any) => {
@@ -79,7 +152,9 @@ export default function AccountsPage() {
                 last_name,
                 email: values.email,
                 password: values.password || undefined,
-                role: 'user', // Default role for new accounts
+                role: 'user', // Default permission role
+                departmentId: values.departmentId,
+                roleId: values.roleId,
                 is_active: true
             });
 
@@ -117,6 +192,9 @@ export default function AccountsPage() {
                 first_name,
                 last_name,
                 role: values.role,
+                departmentId: values.departmentId,
+                roleId: values.roleId,
+                is_active: values.is_active
             });
 
             if (response.ok) {
@@ -124,7 +202,8 @@ export default function AccountsPage() {
                 setIsEditModalOpen(false);
                 fetchUsers();
             } else {
-                message.error('Cập nhật thất bại');
+                const errorData = await response.json().catch(() => ({}));
+                message.error(errorData.message || 'Cập nhật thất bại');
             }
         } catch (error) {
             message.error('Lỗi khi cập nhật tài khoản');
@@ -217,8 +296,17 @@ export default function AccountsPage() {
                                         </td>
                                         <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{user.email}</td>
                                         <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
-                                            {user.role === 'admin' ? 'Quản trị viên' :
-                                                user.role === 'manager' ? 'Quản lý' : 'Nhân viên'}
+                                            <div className="flex flex-col">
+                                                <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                                                    {user.role === 'admin' ? 'Quản trị viên' :
+                                                        user.role === 'manager' ? 'Quản lý' : 'Nhân viên'}
+                                                </span>
+                                                {user.role_item && (
+                                                    <span className="text-xs text-gray-500">
+                                                        ({user.role_item.role_name})
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="py-3 px-4">
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${user.is_active
@@ -229,14 +317,30 @@ export default function AccountsPage() {
                                             </span>
                                         </td>
                                         <td className="py-3 px-4">
-                                            {!(getPermissionLevel() === 'manager' && user.role === 'admin') && (
-                                                <button
-                                                    onClick={() => handleEdit(user)}
-                                                    className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm font-medium"
-                                                >
-                                                    Chỉnh sửa
-                                                </button>
-                                            )}
+                                            <Space size="middle">
+                                                <Button
+                                                    type="text"
+                                                    icon={<EyeOutlined />}
+                                                    onClick={() => handleView(user)}
+                                                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                                                />
+                                                {!(getPermissionLevel() === 'manager' && user.role === 'admin') && (
+                                                    <>
+                                                        <Button
+                                                            type="text"
+                                                            icon={<EditOutlined />}
+                                                            onClick={() => handleEdit(user)}
+                                                            className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                                                        />
+                                                        <Button
+                                                            type="text"
+                                                            danger
+                                                            icon={<DeleteOutlined />}
+                                                            onClick={() => handleDelete(user)}
+                                                        />
+                                                    </>
+                                                )}
+                                            </Space>
                                         </td>
                                     </tr>
                                 ))
@@ -272,12 +376,46 @@ export default function AccountsPage() {
                         label="Vai trò hệ thống"
                         rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}
                     >
-                        <Select>
+                        <Select placeholder="Chọn quyền hệ thống">
                             {getPermissionLevel() === 'admin' && (
                                 <Select.Option value="admin">Quản trị viên</Select.Option>
                             )}
                             <Select.Option value="manager">Quản lý</Select.Option>
                             <Select.Option value="user">Nhân viên</Select.Option>
+                        </Select>
+                    </Form.Item>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <Form.Item
+                            name="departmentId"
+                            label="Phòng ban"
+                        >
+                            <Select placeholder="Chọn phòng ban" allowClear>
+                                {departments.map(d => (
+                                    <Select.Option key={d.id} value={d.id}>{d.name}</Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+
+                        <Form.Item
+                            name="roleId"
+                            label="Chức danh"
+                        >
+                            <Select placeholder="Chọn chức danh" allowClear>
+                                {roles.map(r => (
+                                    <Select.Option key={r.id} value={r.id}>{r.role_name}</Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </div>
+
+                    <Form.Item
+                        name="is_active"
+                        label="Trạng thái tài khoản"
+                    >
+                        <Select>
+                            <Select.Option value={true}>Hoạt động</Select.Option>
+                            <Select.Option value={false}>Bị khóa</Select.Option>
                         </Select>
                     </Form.Item>
 
@@ -293,7 +431,7 @@ export default function AccountsPage() {
                                 color: '#ff4d4f'
                             }}
                         >
-                            Đặt lại mật khẩu mặc định
+                            Đặt lại mật khẩu mặc định (123456)
                         </Button>
                     </Form.Item>
 
@@ -311,6 +449,49 @@ export default function AccountsPage() {
                         </Space>
                     </Form.Item>
                 </Form>
+            </Modal>
+
+            <Modal
+                title="Chi tiết tài khoản"
+                open={isViewModalOpen}
+                onCancel={() => setIsViewModalOpen(false)}
+                footer={[
+                    <Button key="close" onClick={() => setIsViewModalOpen(false)}>
+                        Đóng
+                    </Button>
+                ]}
+                width={600}
+            >
+                {viewingUser && (
+                    <div className="space-y-4">
+                        <div className="flex items-center space-x-4 mb-6">
+                            <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-2xl font-bold">
+                                {viewingUser.first_name[0]}{viewingUser.last_name[0]}
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold">{viewingUser.first_name} {viewingUser.last_name}</h3>
+                                <div className="flex space-x-2 mt-1">
+                                    <Tag color={viewingUser.role === 'admin' ? 'red' : viewingUser.role === 'manager' ? 'orange' : 'blue'}>
+                                        {viewingUser.role === 'admin' ? 'Quản trị viên' : viewingUser.role === 'manager' ? 'Quản lý' : 'Nhân viên'}
+                                    </Tag>
+                                    <Tag color={viewingUser.is_active ? 'green' : 'gray'}>
+                                        {viewingUser.is_active ? 'Đang hoạt động' : 'Đã khóa'}
+                                    </Tag>
+                                </div>
+                            </div>
+                        </div>
+
+                        <Descriptions bordered column={1} size="small">
+                            <Descriptions.Item label="Email">{viewingUser.email}</Descriptions.Item>
+                            <Descriptions.Item label="Số điện thoại">{viewingUser.phone || 'Chưa cập nhật'}</Descriptions.Item>
+                            <Descriptions.Item label="Địa chỉ">{viewingUser.address || 'Chưa cập nhật'}</Descriptions.Item>
+                            <Descriptions.Item label="Giới tính">{viewingUser.gender || 'Chưa cập nhật'}</Descriptions.Item>
+                            <Descriptions.Item label="Ngày sinh">{viewingUser.birth_date ? new Date(viewingUser.birth_date).toLocaleDateString('vi-VN') : 'Chưa cập nhật'}</Descriptions.Item>
+                            <Descriptions.Item label="Phòng ban">{viewingUser.department?.name || <Text type="secondary">N/A</Text>}</Descriptions.Item>
+                            <Descriptions.Item label="Chức danh">{viewingUser.role_item?.role_name || <Text type="secondary">N/A</Text>}</Descriptions.Item>
+                        </Descriptions>
+                    </div>
+                )}
             </Modal>
 
             <Modal
@@ -356,6 +537,30 @@ export default function AccountsPage() {
                     >
                         <Input.Password placeholder="******" autoComplete="new-password" />
                     </Form.Item>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <Form.Item
+                            name="departmentId"
+                            label="Phòng ban"
+                        >
+                            <Select placeholder="Chọn phòng ban" allowClear>
+                                {departments.map(d => (
+                                    <Select.Option key={d.id} value={d.id}>{d.name}</Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+
+                        <Form.Item
+                            name="roleId"
+                            label="Chức danh"
+                        >
+                            <Select placeholder="Chọn chức danh" allowClear>
+                                {roles.map(r => (
+                                    <Select.Option key={r.id} value={r.id}>{r.role_name}</Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </div>
 
                     <Form.Item className="mb-0 text-right">
                         <Space>

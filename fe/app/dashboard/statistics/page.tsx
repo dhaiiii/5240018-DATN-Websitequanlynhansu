@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Statistic, Spin, Typography, message } from 'antd';
-import { UserOutlined, CheckCircleOutlined, StopOutlined, TeamOutlined } from '@ant-design/icons';
+import { Card, Col, Row, Statistic, Spin, Typography, message, Button } from 'antd';
+import { UserOutlined, CheckCircleOutlined, StopOutlined, TeamOutlined, DownloadOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { apiClient } from '@/lib/api/api-client';
+import * as XLSX from 'xlsx';
 
 const { Title } = Typography;
 
@@ -46,6 +47,23 @@ export default function StatisticsPage() {
     }
 
     const { overview, departmentDistribution, attendanceToday } = stats;
+
+    // --- Export to Excel via Backend API ---
+    const handleExportExcel = async () => {
+        try {
+            const token = localStorage.getItem('access_token');
+            const link = document.createElement('a');
+            link.href = `http://localhost:3001/api/statistics/export-excel?token=${token}`;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            message.success('Đang tải file Excel...');
+        } catch (error) {
+            console.error('Export error:', error);
+            message.error('Không thể xuất file Excel');
+        }
+    };
 
     // Config for Pie Chart (Department)
     const pieConfig = {
@@ -92,7 +110,17 @@ export default function StatisticsPage() {
 
     return (
         <div className="p-6 space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Thống kê</h1>
+            <div className="flex items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Thống kê</h1>
+                <Button
+                    type="primary"
+                    icon={<DownloadOutlined />}
+                    onClick={handleExportExcel}
+                    className="bg-green-600 hover:bg-green-700"
+                >
+                    Xuất Excel
+                </Button>
+            </div>
 
             {/* 1. Overview Cards */}
             <Row gutter={[16, 16]}>

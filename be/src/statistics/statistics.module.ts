@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtModule } from '@nestjs/jwt';
 import { StatisticsController } from './statistics.controller';
 import { StatisticsService } from './statistics.service';
 import { User } from '../users/entities/user.entity';
@@ -10,8 +11,10 @@ import { Request } from '../requests/entities/request.entity';
 @Module({
     imports: [
         TypeOrmModule.forFeature([User, Department, Timekeeping, Request]),
+        JwtModule.register({ secret: 'SECRET_KEY' }),
     ],
     controllers: [StatisticsController],
     providers: [StatisticsService],
 })
 export class StatisticsModule { }
+
