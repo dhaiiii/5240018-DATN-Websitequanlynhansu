@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, OneToMany } from 'typeorm';
+import { Timekeeping } from '../timekeeping/timekeeping.entity';
 
 @Entity('working_hours')
 export class WorkingHours {
@@ -16,4 +17,7 @@ export class WorkingHours {
 
     @CreateDateColumn()
     createdAt: Date;
+
+    @OneToMany(() => Timekeeping, timekeeping => timekeeping.workingHours)
+    timekeepings: Timekeeping[];
 }

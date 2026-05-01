@@ -1,6 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Department } from '../../departments/entities/department.entity';
 import { Role as RoleEntity } from '../../roles/entities/role.entity';
+import { Request } from '../../requests/entities/request.entity';
+import { Timekeeping } from '../../timekeeping/timekeeping.entity';
+import { Notification } from '../../notifications/entities/notification.entity';
 
 @Entity('users')
 export class User {
@@ -51,4 +54,13 @@ export class User {
 
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
     updated_at: Date;
+
+    @OneToMany(() => Request, request => request.user)
+    requests: Request[];
+
+    @OneToMany(() => Timekeeping, timekeeping => timekeeping.user)
+    timekeepings: Timekeeping[];
+
+    @OneToMany(() => Notification, notification => notification.user)
+    notifications: Notification[];
 }

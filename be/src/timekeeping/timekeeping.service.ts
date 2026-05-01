@@ -7,6 +7,7 @@ import { WorkingHoursService } from '../working-hours/working-hours.service';
 import { Request } from '../requests/entities/request.entity';
 import { RequestType, RequestStatus } from '../requests/enums/request-type.enum';
 import { NotificationsService } from '../notifications/notifications.service';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class TimekeepingService {
@@ -15,6 +16,8 @@ export class TimekeepingService {
         private timekeepingRepository: Repository<Timekeeping>,
         @InjectRepository(Request)
         private requestRepository: Repository<Request>,
+        @InjectRepository(User)
+        private userRepository: Repository<User>,
         private workingHoursService: WorkingHoursService,
         private notificationsService: NotificationsService,
     ) { }
@@ -71,8 +74,32 @@ export class TimekeepingService {
         const queryBuilder = this.timekeepingRepository.createQueryBuilder('timekeeping')
             .leftJoinAndSelect('timekeeping.workingHours', 'workingHours');
 
+        // Get manager user details to figure out department if manager
+        let managerUser: User | null = null;
+        if (user && user.permission_level === 'manager') {
+            managerUser = await this.userRepository.findOne({
+                where: { id: user.userId },
+                relations: ['department'],
+            });
+        }
+
         // Filter by user email if not admin or manager
-        if (user && user.role !== 'admin' && user.role !== 'manager' && user.permission_level !== 'admin' && user.permission_level !== 'manager') {
+        if (user && user.permission_level === 'manager') {
+            if (managerUser?.department?.id) {
+                // Find all emails of users in the manager's department
+                const deptUsers = await this.userRepository.find({
+                    where: { department: { id: managerUser.department.id } }
+                });
+                const emails = deptUsers.map(u => u.email).filter(Boolean);
+                if (emails.length > 0) {
+                    queryBuilder.andWhere('timekeeping.email IN (:...emails)', { emails });
+                } else {
+                    queryBuilder.andWhere('timekeeping.email = :email', { email: user.email });
+                }
+            } else {
+                queryBuilder.andWhere('timekeeping.email = :email', { email: user.email });
+            }
+        } else if (user && user.role !== 'admin' && user.permission_level !== 'admin') {
             queryBuilder.andWhere('timekeeping.email = :email', { email: user.email });
         }
 
@@ -98,7 +125,21 @@ export class TimekeepingService {
         const reqQueryBuilder = this.requestRepository.createQueryBuilder('request')
             .where('request.status = :status', { status: RequestStatus.APPROVED });
 
-        if (user && user.role !== 'admin' && user.role !== 'manager' && user.permission_level !== 'admin' && user.permission_level !== 'manager') {
+        if (user && user.permission_level === 'manager') {
+            if (managerUser?.department?.id) {
+                const deptUsers = await this.userRepository.find({
+                    where: { department: { id: managerUser.department.id } }
+                });
+                const emails = deptUsers.map(u => u.email).filter(Boolean);
+                if (emails.length > 0) {
+                    reqQueryBuilder.andWhere('request.email IN (:...emails)', { emails });
+                } else {
+                    reqQueryBuilder.andWhere('request.email = :email', { email: user.email });
+                }
+            } else {
+                reqQueryBuilder.andWhere('request.email = :email', { email: user.email });
+            }
+        } else if (user && user.role !== 'admin' && user.permission_level !== 'admin') {
             reqQueryBuilder.andWhere('request.email = :email', { email: user.email });
         } else if (filters.name) {
             reqQueryBuilder.andWhere('request.email ILIKE :name', { name: `%${filters.name}%` });

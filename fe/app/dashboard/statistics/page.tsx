@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Col, Row, Statistic, Spin, Typography, message } from 'antd';
 import { UserOutlined, CheckCircleOutlined, StopOutlined, TeamOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
+import { apiClient } from '@/lib/api/api-client';
 
 const { Title } = Typography;
 
@@ -20,7 +21,7 @@ export default function StatisticsPage() {
     const fetchStats = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE}/statistics/summary`);
+            const response = await apiClient.get('/statistics/summary');
             if (!response.ok) throw new Error('Failed to fetch stats');
             const data = await response.json();
             setStats(data);

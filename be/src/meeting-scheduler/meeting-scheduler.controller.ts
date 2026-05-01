@@ -1,15 +1,18 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Query, UsePipes, ValidationPipe, UseGuards } from '@nestjs/common';
 import { MeetingSchedulerService } from './meeting-scheduler.service';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('meeting-scheduler')
 export class MeetingSchedulerController {
     constructor(private readonly meetingSchedulerService: MeetingSchedulerService) { }
 
     // GET /meeting-scheduler/employees
+    @UseGuards(JwtAuthGuard)
     @Get('employees')
-    getEmployees() {
-        return this.meetingSchedulerService.getEmployees();
+    getEmployees(@CurrentUser() user: any) {
+        return this.meetingSchedulerService.getEmployees(user);
     }
 
     // GET /meeting-scheduler/rooms
@@ -28,9 +31,10 @@ export class MeetingSchedulerController {
     }
 
     // GET /meeting-scheduler/meetings
+    @UseGuards(JwtAuthGuard)
     @Get('meetings')
-    getAllMeetings() {
-        return this.meetingSchedulerService.getAllMeetings();
+    getAllMeetings(@CurrentUser() user: any) {
+        return this.meetingSchedulerService.getAllMeetings(user);
     }
 
     // GET /meeting-scheduler/meetings/:id

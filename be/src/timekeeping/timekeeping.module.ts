@@ -7,9 +7,11 @@ import { WorkingHoursModule } from '../working-hours/working-hours.module';
 import { Request } from '../requests/entities/request.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 
+import { User } from '../users/entities/user.entity';
+
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Timekeeping, Request]),
+        TypeOrmModule.forFeature([Timekeeping, Request, User]),
         WorkingHoursModule,
         NotificationsModule,
     ],

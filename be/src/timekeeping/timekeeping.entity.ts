@@ -10,7 +10,7 @@ export class Timekeeping {
     @Column({ default: '' })
     email: string;
 
-    @ManyToOne(() => User)
+    @ManyToOne(() => User, user => user.timekeepings)
     @JoinColumn({ name: 'email', referencedColumnName: 'email' })
     user: User;
 
@@ -26,7 +26,7 @@ export class Timekeeping {
     @Column({ type: 'time', nullable: true })
     expected_end_time: string | null;
 
-    @ManyToOne(() => WorkingHours, { nullable: true })
+    @ManyToOne(() => WorkingHours, workingHours => workingHours.timekeepings, { nullable: true })
     @JoinColumn({ name: 'working_hours_id' })
     workingHours: WorkingHours;
 

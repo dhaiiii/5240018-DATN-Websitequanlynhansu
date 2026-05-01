@@ -20,16 +20,63 @@ export class StatisticsService {
         private requestRepository: Repository<Request>,
     ) { }
 
-    async getSummary() {
-        const totalUsers = await this.userRepository.count();
-        const activeUsers = await this.userRepository.count({ where: { is_active: true } });
-        const retiredUsers = await this.userRepository.count({ where: { is_active: false } });
+    async getSummary(currentUser?: any) {
+        let managerDeptId: number | undefined;
+        let emailsFilter: string[] | undefined;
 
-        const departmentStats = await this.userRepository
+        if (currentUser && currentUser.permission_level === 'manager') {
+            const manager = await this.userRepository.findOne({
+                where: { id: currentUser.userId },
+                relations: ['department'],
+            });
+            if (manager?.department?.id) {
+                managerDeptId = manager.department.id;
+                const deptUsers = await this.userRepository.find({
+                    where: { department: { id: managerDeptId } }
+                });
+                emailsFilter = deptUsers.map(u => u.email).filter(Boolean);
+            } else {
+                managerDeptId = -1; // non existent department to return empty stats
+                emailsFilter = [currentUser.email];
+            }
+        } else if (currentUser && currentUser.role !== 'admin' && currentUser.permission_level !== 'admin' && currentUser.permission_level !== 'manager') {
+            const user = await this.userRepository.findOne({
+                where: { id: currentUser.userId },
+                relations: ['department'],
+            });
+            if (user?.department?.id) {
+                managerDeptId = user.department.id;
+                emailsFilter = [currentUser.email]; // Maybe normal users shouldn't see stats, but if they do, just their own or their dept. Wait, normal users shouldn't really see global stats. Let's return just their own data.
+            } else {
+                managerDeptId = -1;
+                emailsFilter = [currentUser.email];
+            }
+        }
+
+        const baseUserQuery: any = {};
+        if (managerDeptId && managerDeptId !== -1) {
+            baseUserQuery.department = { id: managerDeptId };
+        } else if (managerDeptId === -1) {
+            baseUserQuery.id = currentUser?.userId || -1;
+        }
+
+        const totalUsers = await this.userRepository.count({ where: baseUserQuery });
+        const activeUsers = await this.userRepository.count({ where: { ...baseUserQuery, is_active: true } });
+        const retiredUsers = await this.userRepository.count({ where: { ...baseUserQuery, is_active: false } });
+
+        const deptQuery = this.userRepository
             .createQueryBuilder('user')
             .leftJoin('user.department', 'department')
             .select('department.name', 'name')
-            .addSelect('COUNT(user.id)', 'count')
+            .addSelect('COUNT(user.id)', 'count');
+
+        if (managerDeptId && managerDeptId !== -1) {
+            deptQuery.where('department.id = :managerDeptId', { managerDeptId });
+        } else if (managerDeptId === -1) {
+            deptQuery.where('user.id = :userId', { userId: currentUser?.userId || -1 });
+        }
+
+        const departmentStats = await deptQuery
             .groupBy('department.id')
             .addGroupBy('department.name')
             .getRawMany();
@@ -40,28 +87,37 @@ export class StatisticsService {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
 
-        const workingToday = await this.timekeepingRepository.count({
-            where: {
-                created_at: Between(today, tomorrow),
-            },
-        });
+        const tkWhere: any = {
+            created_at: Between(today, tomorrow),
+        };
+        if (emailsFilter && emailsFilter.length > 0) {
+            tkWhere.email = emailsFilter.length === 1 ? emailsFilter[0] : (emailsFilter as any); // Using In might be better but typeorm finds it if we use simple queries. Actually let's use queryBuilder for safety or exact.
+        }
 
-        const leaveToday = await this.requestRepository.count({
-            where: [
-                {
-                    type: RequestType.PAID_LEAVE,
-                    status: RequestStatus.APPROVED,
-                    start_date: LessThanOrEqual(tomorrow),
-                    end_date: MoreThanOrEqual(today),
-                },
-                {
-                    type: RequestType.UNPAID_LEAVE,
-                    status: RequestStatus.APPROVED,
-                    start_date: LessThanOrEqual(tomorrow),
-                    end_date: MoreThanOrEqual(today),
-                }
-            ],
-        });
+        const tkQuery = this.timekeepingRepository.createQueryBuilder('timekeeping')
+            .where('timekeeping.created_at BETWEEN :today AND :tomorrow', { today, tomorrow });
+
+        if (emailsFilter && emailsFilter.length > 0) {
+            tkQuery.andWhere('timekeeping.email IN (:...emailsFilter)', { emailsFilter });
+        } else if (emailsFilter && emailsFilter.length === 0) {
+            tkQuery.andWhere('1=0');
+        }
+
+        const workingToday = await tkQuery.getCount();
+
+        const reqQuery = this.requestRepository.createQueryBuilder('request')
+            .where('request.status = :status', { status: RequestStatus.APPROVED })
+            .andWhere('request.start_date <= :tomorrow', { tomorrow })
+            .andWhere('request.end_date >= :today', { today })
+            .andWhere('request.type IN (:...types)', { types: [RequestType.PAID_LEAVE, RequestType.UNPAID_LEAVE] });
+
+        if (emailsFilter && emailsFilter.length > 0) {
+            reqQuery.andWhere('request.email IN (:...emailsFilter)', { emailsFilter });
+        } else if (emailsFilter && emailsFilter.length === 0) {
+            reqQuery.andWhere('1=0');
+        }
+
+        const leaveToday = await reqQuery.getCount();
 
         // Simple absent calculation: Active employees - those who are working or on leave
         const absentToday = Math.max(0, activeUsers - workingToday - leaveToday);

@@ -31,19 +31,19 @@ const allMenuItems = [
         key: '/dashboard',
         icon: <DashboardOutlined />,
         label: <Link href="/dashboard">Tổng quan</Link>,
-        roles: ['admin', 'user'],
+        roles: ['admin', 'manager', 'user'],
     },
     {
         key: '/dashboard/employees',
         icon: <UserOutlined />,
         label: <Link href="/dashboard/employees">Nhân viên</Link>,
-        roles: ['admin'],
+        roles: ['admin', 'manager'],
     },
     {
         key: '/dashboard/departments',
         icon: <TeamOutlined />,
         label: <Link href="/dashboard/departments">Phòng ban</Link>,
-        roles: ['admin', 'user'],
+        roles: ['admin', 'manager', 'user'],
     },
     {
         key: '/dashboard/roles',
@@ -55,31 +55,31 @@ const allMenuItems = [
         key: '/dashboard/timekeeping',
         icon: <ScheduleOutlined />,
         label: <Link href="/dashboard/timekeeping">Chấm công</Link>,
-        roles: ['admin', 'user'],
+        roles: ['admin', 'manager', 'user'],
     },
     {
         key: '/dashboard/requests',
         icon: <FileTextOutlined />,
         label: <Link href="/dashboard/requests">Đơn từ</Link>,
-        roles: ['admin', 'user'],
+        roles: ['admin', 'manager', 'user'],
     },
     {
         key: '/dashboard/salary',
         icon: <DollarOutlined />,
         label: <Link href="/dashboard/salary">Lương</Link>,
-        roles: ['admin'],
+        roles: ['admin', 'user'],
     },
     {
         key: '/dashboard/statistics',
         icon: <BarChartOutlined />,
         label: <Link href="/dashboard/statistics">Thống kê</Link>,
-        roles: ['admin'],
+        roles: ['admin', 'manager'],
     },
     {
         key: '/dashboard/meeting-scheduler',
         icon: <CalendarOutlined />,
         label: <Link href="/dashboard/meeting-scheduler">Lịch họp</Link>,
-        roles: ['admin', 'user'],
+        roles: ['admin', 'manager', 'user'],
     },
     {
         key: '/dashboard/accounts',
@@ -124,14 +124,18 @@ export default function DashboardLayout({
     }, [router]);
 
     useEffect(() => {
-        const canViewAdminOnly = isAdmin() || isManager();
+        const checkRoleInclude = (itemRoles: string[]) => {
+            if (isAdmin() && itemRoles.includes('admin')) return true;
+            if (isManager() && itemRoles.includes('manager')) return true;
+            if (isUser() && itemRoles.includes('user')) return true;
 
-        const filtered = allMenuItems.filter(item => {
-            if (item.roles.includes('admin') && item.roles.length === 1) {
-                return canViewAdminOnly;
-            }
-            return true; // if it includes 'user', everyone can see it
-        });
+            // Allow admin to see user items if they want to? By default admin should probably see everything except if excluded
+            if (isAdmin()) return true;
+
+            return false;
+        };
+
+        const filtered = allMenuItems.filter(item => checkRoleInclude(item.roles));
         setMenuItems(filtered);
 
 

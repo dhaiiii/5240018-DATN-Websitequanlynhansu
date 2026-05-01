@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { isAdmin, isManager } from '@/lib/utils/auth.utils';
 import {
     Table,
     Card,
@@ -121,6 +122,14 @@ export default function MeetingSchedulerPage() {
         alternatives: Room[];
     } | null>(null);
     const [form] = Form.useForm();
+
+    const [isSysAdmin, setIsSysAdmin] = useState(false);
+    const [isSysManager, setIsSysManager] = useState(false);
+
+    useEffect(() => {
+        setIsSysAdmin(isAdmin());
+        setIsSysManager(isManager());
+    }, []);
 
     const fetchData = useCallback(async () => {
         try {
@@ -338,7 +347,7 @@ export default function MeetingSchedulerPage() {
             title: 'Thao tác',
             key: 'action',
             render: (_: any, record: Meeting) => (
-                record.status === 'SCHEDULED' ? (
+                (isSysAdmin || isSysManager) && record.status === 'SCHEDULED' ? (
                     <Popconfirm
                         title="Huỷ cuộc họp?"
                         description="Bạn có chắc muốn huỷ cuộc họp này không?"
@@ -366,23 +375,25 @@ export default function MeetingSchedulerPage() {
                     <Title level={2} style={{ margin: 0, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                         📅 Lịch Họp
                     </Title>
-                    <Text type="secondary">Đặt phòng họp, quản lý lịch và tránh xung đột thời gian</Text>
+                    <Text type="secondary">Quản lý lịch và tránh xung đột thời gian</Text>
                 </div>
-                <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    size="large"
-                    onClick={handleOpenModal}
-                    style={{
-                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                        border: 'none',
-                        borderRadius: 10,
-                        fontWeight: 600,
-                        boxShadow: '0 4px 14px rgba(99,102,241,0.4)',
-                    }}
-                >
-                    Đặt lịch họp
-                </Button>
+                {(isSysAdmin || isSysManager) && (
+                    <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        size="large"
+                        onClick={handleOpenModal}
+                        style={{
+                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                            border: 'none',
+                            borderRadius: 10,
+                            fontWeight: 600,
+                            boxShadow: '0 4px 14px rgba(99,102,241,0.4)',
+                        }}
+                    >
+                        Đặt lịch họp
+                    </Button>
+                )}
             </div>
 
             {/* Stats */}

@@ -1,4 +1,52 @@
+'use client';
+
+import { isAdmin, isManager, isUser } from '@/lib/utils/auth.utils';
+import { useEffect, useState } from 'react';
+
 export default function SalaryPage() {
+    const [isSysAdmin, setIsSysAdmin] = useState(false);
+    const [isSysManager, setSysManager] = useState(false);
+
+    useEffect(() => {
+        setIsSysAdmin(isAdmin());
+        setSysManager(isManager());
+    }, []);
+
+    // Giao diện cho nhân viên bình thường (chỉ xem lương cá nhân)
+    if (!isSysAdmin && !isSysManager) {
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Thông tin lương cá nhân</h1>
+                </div>
+                <div className="bg-white dark:bg-zinc-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-700">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Chi tiết lương tháng này</h3>
+                    <div className="space-y-4">
+                        <div className="flex justify-between border-b pb-2">
+                            <span className="text-gray-600">Lương cơ bản</span>
+                            <span className="font-medium">10,000,000 VND</span>
+                        </div>
+                        <div className="flex justify-between border-b pb-2">
+                            <span className="text-gray-600">Phụ cấp ăn trưa, đi lại</span>
+                            <span className="font-medium">2,000,000 VND</span>
+                        </div>
+                        <div className="flex justify-between border-b pb-2">
+                            <span className="text-gray-600">Thưởng</span>
+                            <span className="font-medium">500,000 VND</span>
+                        </div>
+                        <div className="flex justify-between border-b pb-2">
+                            <span className="text-gray-600">Khấu trừ</span>
+                            <span className="font-medium text-red-500">- 500,000 VND</span>
+                        </div>
+                        <div className="flex justify-between pt-2">
+                            <span className="text-lg font-semibold">Thực nhận</span>
+                            <span className="text-lg font-bold text-green-600">12,000,000 VND</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">

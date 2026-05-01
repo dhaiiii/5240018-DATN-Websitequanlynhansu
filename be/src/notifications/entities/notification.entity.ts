@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
 
 export enum NotificationType {
     TIMEKEEPING_IN = 'TIMEKEEPING_IN',
@@ -17,6 +18,10 @@ export class Notification {
     // Người nhận thông báo
     @Column()
     recipient_email: string;
+
+    @ManyToOne(() => User, user => user.notifications)
+    @JoinColumn({ name: 'recipient_email', referencedColumnName: 'email' })
+    user: User;
 
     @Column({ type: 'enum', enum: NotificationType })
     type: NotificationType;

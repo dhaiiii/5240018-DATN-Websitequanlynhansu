@@ -73,8 +73,19 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  findAll() {
+  async findAll(currentUser?: any) {
+    let whereCondition: any = {};
+    if (currentUser && currentUser.permission_level === 'manager') {
+      const managerUser = await this.findOne(currentUser.userId);
+      if (managerUser?.department?.id) {
+        whereCondition = { department: { id: managerUser.department.id } };
+      } else {
+        whereCondition = { id: currentUser.userId };
+      }
+    }
+
     return this.usersRepository.find({
+      where: whereCondition,
       relations: ['department', 'role_item'],
     });
   }
@@ -116,36 +127,50 @@ export class UsersService {
           throw new ForbiddenException('Quản lý không được phép cấp quyền Quản trị viên');
         }
       }
+
+      // 3. Manager can only update users in their department
+      const managerUser = await this.findOne(currentUser.userId);
+      if (user.id !== currentUser.userId &&
+        (!managerUser?.department?.id || user.department?.id !== managerUser.department.id)) {
+        throw new ForbiddenException('Quản lý chỉ được phép cập nhật thông tin nhân viên trong bộ phận của mình');
+      }
     }
 
     if (!user) return null;
-
-    if (departmentId !== undefined) {
-      if (departmentId === null) {
-        user.department = null;
-      } else {
-        const department = await this.departmentRepository.findOneBy({ id: departmentId });
-        if (department) {
-          user.department = department;
-        }
-      }
-    }
-
-    if (roleId !== undefined) {
-      if (roleId === null) {
-        user.role_item = null;
-      } else {
-        const role = await this.rolesRepository.findOneBy({ id: roleId });
-        if (role) {
-          user.role_item = role;
-        }
-      }
-    }
 
     // Hash password if provided
     if (userData.password) {
       const salt = await bcrypt.genSalt(10);
       userData.password = await bcrypt.hash(userData.password, salt);
+    }
+
+    if (currentUser && currentUser.permission_level === 'manager') {
+      // Managers can only update basic info, they cannot change department or roles
+      delete (userData as any).roleId;
+      delete userData.role;
+      delete (userData as any).departmentId;
+    } else {
+      if (departmentId !== undefined) {
+        if (departmentId === null) {
+          user.department = null;
+        } else {
+          const department = await this.departmentRepository.findOneBy({ id: departmentId });
+          if (department) {
+            user.department = department;
+          }
+        }
+      }
+
+      if (roleId !== undefined) {
+        if (roleId === null) {
+          user.role_item = null;
+        } else {
+          const role = await this.rolesRepository.findOneBy({ id: roleId });
+          if (role) {
+            user.role_item = role;
+          }
+        }
+      }
     }
 
     console.log('UsersService.update - userData:', userData);

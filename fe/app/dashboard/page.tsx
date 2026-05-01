@@ -26,6 +26,8 @@ import { isAdmin, isManager } from '../../lib/utils/auth.utils';
 
 const { Title, Text } = Typography;
 
+import { apiClient } from '@/lib/api/api-client';
+
 const API_BASE = 'http://localhost:3001/api';
 
 // Tọa độ công ty ban đầu (Mặc định: trung tâm Hà Nội). Sẽ được ghi đè bằng LocalStorage nếu Admin thiết lập.
@@ -88,38 +90,36 @@ export default function DashboardPage() {
 
             const email = localStorage.getItem('userEmail');
             const statsUrl = privileged
-                ? `${API_BASE}/requests/stats`
-                : `${API_BASE}/requests/stats?email=${email}`;
+                ? `/requests/stats`
+                : `/requests/stats?email=${email}`;
 
             const fetchPromises = [
-                fetch(statsUrl)
+                apiClient.get(statsUrl)
             ];
 
             // Only fetch counts if privileged
             if (privileged) {
-                fetchPromises.push(fetch(`${API_BASE}/users`));
-                fetchPromises.push(fetch(`${API_BASE}/departments`));
+                fetchPromises.push(apiClient.get(`/users`));
+                fetchPromises.push(apiClient.get(`/departments`));
             }
 
             // Fetch timekeeping status for current user
-            fetchPromises.push(fetch(`${API_BASE}/timekeeping`));
+            fetchPromises.push(apiClient.get(`/timekeeping`));
 
             // Fetch company GPS setting from DB
-            fetchPromises.push(fetch(`${API_BASE}/settings/company_gps`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            }));
+            fetchPromises.push(apiClient.get(`/settings/company_gps`));
 
             const responses = await Promise.all(fetchPromises);
-            const dashboardStats = await responses[0].json();
+
+            // Lấy JSON data nếu response hợp lệ
+            const dashboardStats = responses[0].ok ? await responses[0].json() : {};
 
             let totalEmployees = 0;
             let totalDepartments = 0;
 
             if (privileged) {
-                const users = await responses[1].json();
-                const depts = await responses[2].json();
+                const users = responses[1].ok ? await responses[1].json() : [];
+                const depts = responses[2].ok ? await responses[2].json() : [];
                 totalEmployees = Array.isArray(users) ? users.length : 0;
                 totalDepartments = Array.isArray(depts) ? depts.length : 0;
             }
@@ -132,7 +132,7 @@ export default function DashboardPage() {
             setRecentActivities(dashboardStats.recentActivities || []);
 
             // Process company location from DB
-            const settingsRes = await responses[responses.length - 1].json();
+            const settingsRes = responses[responses.length - 1].ok ? await responses[responses.length - 1].json() : null;
             if (settingsRes && settingsRes.value) {
                 try {
                     const dbLoc = JSON.parse(settingsRes.value);
@@ -144,7 +144,7 @@ export default function DashboardPage() {
             }
 
             // Process timekeeping logic
-            const timekeepingRes = await responses[responses.length - 2].json();
+            const timekeepingRes = responses[responses.length - 2].ok ? await responses[responses.length - 2].json() : [];
             if (Array.isArray(timekeepingRes) && email) {
                 const todayStr = new Date().toLocaleDateString('vi-VN');
                 const todayRecord = timekeepingRes.find((record: any) =>
@@ -192,15 +192,9 @@ export default function DashboardPage() {
                 return;
             }
 
-            const res = await fetch(`${API_BASE}/requests/${id}/status`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    status,
-                    approverEmail: userEmail
-                }),
+            const res = await apiClient.patch(`/requests/${id}/status`, {
+                status,
+                approverEmail: userEmail
             });
 
             if (res.ok) {
@@ -236,16 +230,9 @@ export default function DashboardPage() {
                 setCompanyLoc(updatedLoc);
 
                 // Save to Database
-                fetch(`${API_BASE}/settings`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                    },
-                    body: JSON.stringify({
-                        key: 'company_gps',
-                        value: JSON.stringify(updatedLoc)
-                    })
+                apiClient.post(`/settings`, {
+                    key: 'company_gps',
+                    value: JSON.stringify(updatedLoc)
                 }).then(res => {
                     if (res.ok) {
                         message.success({ content: `Đã lưu tọa độ công ty vào hệ thống!`, key: 'gps' });
@@ -302,14 +289,10 @@ export default function DashboardPage() {
 
                     const now = new Date().toLocaleTimeString('en-GB'); // HH:mm:ss format
 
-                    const res = await fetch(`${API_BASE}/timekeeping`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            email,
-                            start_time: type === 'in' ? now : undefined,
-                            end_time: type === 'out' ? now : undefined,
-                        })
+                    const res = await apiClient.post(`/timekeeping`, {
+                        email,
+                        start_time: type === 'in' ? now : undefined,
+                        end_time: type === 'out' ? now : undefined,
                     });
 
                     if (res.ok) {

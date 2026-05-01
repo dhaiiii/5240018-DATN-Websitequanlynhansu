@@ -56,8 +56,8 @@ export class UsersController {
 
   @Get()
   @RequirePermission(Permission.Manager) // Managers and admins can view
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@CurrentUser() currentUser: any) {
+    return this.usersService.findAll(currentUser);
   }
 
   @Get(':id')

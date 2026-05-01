@@ -4,12 +4,15 @@ import { Repository } from 'typeorm';
 import { Request } from './entities/request.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { RequestType, RequestStatus } from './enums/request-type.enum';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class RequestsService {
     constructor(
         @InjectRepository(Request)
         private requestsRepository: Repository<Request>,
+        @InjectRepository(User)
+        private userRepository: Repository<User>,
     ) { }
 
     async create(createRequestDto: CreateRequestDto) {
@@ -55,20 +58,66 @@ export class RequestsService {
         return await this.requestsRepository.save(request);
     }
 
-    async findAll() {
+    async findAll(currentUser?: any) {
+        if (currentUser && currentUser.permission_level === 'manager') {
+            const managerUser = await this.userRepository.findOne({
+                where: { id: currentUser.userId },
+                relations: ['department'],
+            });
+            if (managerUser?.department?.id) {
+                const deptUsers = await this.userRepository.find({
+                    where: { department: { id: managerUser.department.id } }
+                });
+                const emails = deptUsers.map(u => u.email).filter(Boolean);
+                if (emails.length > 0) {
+                    return await this.requestsRepository.createQueryBuilder('request')
+                        .where('request.email IN (:...emails)', { emails })
+                        .orderBy('request.created_at', 'DESC')
+                        .getMany();
+                } else {
+                    return await this.requestsRepository.find({ where: { email: currentUser.email }, order: { created_at: 'DESC' } });
+                }
+            }
+            return await this.requestsRepository.find({ where: { email: currentUser.email }, order: { created_at: 'DESC' } });
+        } else if (currentUser && currentUser.role !== 'admin' && currentUser.permission_level !== 'admin') {
+            return await this.requestsRepository.find({ where: { email: currentUser.email }, order: { created_at: 'DESC' } });
+        }
+
         return await this.requestsRepository.find({
             order: { created_at: 'DESC' },
         });
     }
 
-    async findByEmail(email: string) {
+    async findByEmail(email: string, currentUser?: any) {
+        // If manager is trying to view a specific email, verify the person is in their department
+        if (currentUser && currentUser.permission_level === 'manager') {
+            const managerUser = await this.userRepository.findOne({ where: { id: currentUser.userId }, relations: ['department'] });
+            const targetUser = await this.userRepository.findOne({ where: { email }, relations: ['department'] });
+            if (!managerUser?.department?.id || !targetUser?.department?.id || managerUser.department.id !== targetUser.department.id) {
+                if (email !== currentUser.email) {
+                    throw new BadRequestException('Quản lý chỉ được xem đơn từ của nhân viên trong bộ phận');
+                }
+            }
+        }
         return await this.requestsRepository.find({
             where: { email },
             order: { created_at: 'DESC' },
         });
     }
 
-    async updateStatus(id: number, status: string, approverEmail: string) {
+    async updateStatus(id: number, status: string, approverEmail: string, currentUser?: any) {
+        if (currentUser && currentUser.permission_level === 'manager') {
+            const request = await this.requestsRepository.findOne({ where: { id } });
+            if (!request) throw new BadRequestException('Không tìm thấy yêu cầu');
+            const managerUser = await this.userRepository.findOne({ where: { id: currentUser.userId }, relations: ['department'] });
+            const targetUser = await this.userRepository.findOne({ where: { email: request.email }, relations: ['department'] });
+            if (!managerUser?.department?.id || !targetUser?.department?.id || managerUser.department.id !== targetUser.department.id) {
+                if (request.email !== currentUser.email) {
+                    throw new BadRequestException('Quản lý chỉ được duyệt đơn từ của nhân viên trong bộ phận');
+                }
+            }
+        }
+
         await this.requestsRepository.update(id, {
             status: status as any,
             processed_by: approverEmail
@@ -76,18 +125,43 @@ export class RequestsService {
         return await this.requestsRepository.findOne({ where: { id } });
     }
 
-    async getDashboardStats(email?: string) {
+    async getDashboardStats(email?: string, currentUser?: any) {
         const whereClause: any = { status: 'PENDING' as any };
         if (email) {
             whereClause.email = email;
         }
 
-        const pendingCount = await this.requestsRepository.count({
-            where: whereClause
-        });
+        let emailsFilter: string[] | null = null;
+        if (currentUser && currentUser.permission_level === 'manager' && !email) {
+            const managerUser = await this.userRepository.findOne({
+                where: { id: currentUser.userId },
+                relations: ['department'],
+            });
+            if (managerUser?.department?.id) {
+                const deptUsers = await this.userRepository.find({
+                    where: { department: { id: managerUser.department.id } }
+                });
+                emailsFilter = deptUsers.map(u => u.email).filter(Boolean);
+            } else {
+                emailsFilter = [currentUser.email];
+            }
+        } else if (currentUser && currentUser.role !== 'admin' && currentUser.permission_level !== 'admin' && currentUser.permission_level !== 'manager' && !email) {
+            emailsFilter = [currentUser.email];
+        }
+
+        const queryCount = this.requestsRepository.createQueryBuilder('request')
+            .where('request.status = :status', { status: 'PENDING' });
+
+        if (email) queryCount.andWhere('request.email = :email', { email });
+        else if (emailsFilter !== null) {
+            if (emailsFilter.length > 0) queryCount.andWhere('request.email IN (:...emails)', { emails: emailsFilter });
+            else queryCount.andWhere('1=0');
+        }
+
+        const pendingCount = await queryCount.getCount();
 
         const query = this.requestsRepository.createQueryBuilder('request')
-            .leftJoin('users', 'user', 'user.email = request.email')
+            .leftJoin('request.user', 'user')
             .select([
                 'request.id AS request_id',
                 'request.type AS request_type',
@@ -103,6 +177,9 @@ export class RequestsService {
 
         if (email) {
             query.andWhere('request.email = :email', { email });
+        } else if (emailsFilter !== null) {
+            if (emailsFilter.length > 0) query.andWhere('request.email IN (:...emails)', { emails: emailsFilter });
+            else query.andWhere('1=0');
         }
 
         const recentActivities = await query.getRawMany();

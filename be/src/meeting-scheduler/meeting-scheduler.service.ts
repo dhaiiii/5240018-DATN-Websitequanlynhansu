@@ -30,12 +30,46 @@ export class MeetingSchedulerService implements OnModuleInit {
     }
 
     // ─── GET EMPLOYEES (for organizer select) ───────────────────────────────
-    async getEmployees() {
-        const users = await this.userRepository.find({
+    async getEmployees(currentUser?: any) {
+        const queryOptions: any = {
             where: { is_active: true },
             select: ['id', 'first_name', 'last_name', 'email'],
             order: { last_name: 'ASC', first_name: 'ASC' },
-        });
+            relations: ['department'],
+        };
+
+        let shouldFilterByDept = false;
+        let managerDeptId: number | undefined;
+
+        if (currentUser && currentUser.permission_level === 'manager') {
+            const manager = await this.userRepository.findOne({
+                where: { id: currentUser.userId },
+                relations: ['department'],
+            });
+            if (manager?.department?.id) {
+                shouldFilterByDept = true;
+                managerDeptId = manager.department.id;
+            }
+        }
+
+        if (currentUser && currentUser.role !== 'admin' && currentUser.permission_level !== 'admin' && currentUser.permission_level !== 'manager') {
+            const normalUser = await this.userRepository.findOne({
+                where: { id: currentUser.userId },
+                relations: ['department'],
+            });
+            if (normalUser?.department?.id) {
+                shouldFilterByDept = true;
+                managerDeptId = normalUser.department.id;
+            } else {
+                return []; // A normal user without a department sees no one else
+            }
+        }
+
+        if (shouldFilterByDept && managerDeptId) {
+            queryOptions.where.department = { id: managerDeptId };
+        }
+
+        const users = await this.userRepository.find(queryOptions);
         return users.map(u => ({
             id: u.id,
             name: `${u.last_name} ${u.first_name}`,
@@ -52,10 +86,19 @@ export class MeetingSchedulerService implements OnModuleInit {
     }
 
     // ─── GET ALL MEETINGS ─────────────────────────────────────────────────────
-    async getAllMeetings() {
-        return await this.dataSource
+    async getAllMeetings(currentUser?: any) {
+        const query = this.dataSource
             .getRepository(Meeting)
-            .find({ relations: ['room'], order: { start_time: 'DESC' } });
+            .createQueryBuilder('meeting')
+            .leftJoinAndSelect('meeting.room', 'room')
+            .orderBy('meeting.start_time', 'DESC');
+
+        if (currentUser && currentUser.role !== 'admin' && currentUser.permission_level !== 'admin' && currentUser.permission_level !== 'manager') {
+            // For simple-json stored as text in postgres, we can use string matching
+            query.where('meeting.organizer LIKE :emailPattern', { emailPattern: `%"email":"${currentUser.email}"%` });
+        }
+
+        return await query.getMany();
     }
 
     // ─── GET MEETING BY ID ────────────────────────────────────────────────────

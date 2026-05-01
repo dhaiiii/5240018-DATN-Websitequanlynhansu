@@ -10,7 +10,7 @@ export class Request {
     @Column()
     email: string;
 
-    @ManyToOne(() => User)
+    @ManyToOne(() => User, user => user.requests)
     @JoinColumn({ name: 'email', referencedColumnName: 'email' })
     user: User;
 
