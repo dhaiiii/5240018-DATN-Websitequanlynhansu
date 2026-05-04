@@ -38,5 +38,10 @@ export const apiClient = {
         method: 'PATCH',
         body: JSON.stringify(body)
     }),
+    put: (url: string, body: any, options?: RequestInit) => fetchWithAuth(url, {
+        ...options,
+        method: 'PUT',
+        body: JSON.stringify(body)
+    }),
     delete: (url: string, options?: RequestInit) => fetchWithAuth(url, { ...options, method: 'DELETE' }),
 };

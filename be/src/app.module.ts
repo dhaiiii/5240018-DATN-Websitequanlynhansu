@@ -14,6 +14,7 @@ import { StatisticsModule } from './statistics/statistics.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { MeetingSchedulerModule } from './meeting-scheduler/meeting-scheduler.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { PayrollsModule } from './payrolls/payrolls.module';
 import { join } from 'path';
 
 @Module({
@@ -44,6 +45,7 @@ import { join } from 'path';
     StatisticsModule,
     MeetingSchedulerModule,
     NotificationsModule,
+    PayrollsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
