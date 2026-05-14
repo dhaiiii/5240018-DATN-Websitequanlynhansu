@@ -1,0 +1,22 @@
+[
+  {
+    "table_name": "timekeeping",
+    "column_name": "email"
+  },
+  {
+    "table_name": "requests",
+    "column_name": "email"
+  },
+  {
+    "table_name": "notifications",
+    "column_name": "recipient_email"
+  },
+  {
+    "table_name": "payrolls",
+    "column_name": "user_id"
+  },
+  {
+    "table_name": "salary_configs",
+    "column_name": "user_id"
+  }
+]
