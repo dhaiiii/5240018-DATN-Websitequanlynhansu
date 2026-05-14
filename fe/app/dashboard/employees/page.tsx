@@ -162,11 +162,14 @@ export default function EmployeesPage() {
     };
 
     const onFinish = async (values: any) => {
-        const payload = {
-            first_name: values.fullName?.split(' ').slice(0, -1).join(' ') || 'User',
-            last_name: values.fullName?.split(' ').slice(-1).join(' ') || 'Name',
+        const nameParts = values.fullName ? values.fullName.trim().split(' ') : [];
+        const lastName = nameParts.length > 0 ? nameParts[nameParts.length - 1] : 'Name';
+        const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : ' '; // Leave empty space if no separate first name
+
+        const payload: any = {
+            first_name: firstName,
+            last_name: lastName,
             email: values.email,
-            password: values.password || 'Mac@12345',
             phone: values.phone,
             address: values.address,
             avatar: avatarPreview,
@@ -176,6 +179,14 @@ export default function EmployeesPage() {
             roleId: values.roleId,
             birth_date: values.birth_date ? values.birth_date.format('YYYY-MM-DD') : null,
         };
+
+        if (!editingEmployee) {
+            // New user must have password
+            payload.password = values.password || 'Mac@12345';
+        } else if (values.password) {
+            // Only send password on edit if they explicitly provided one
+            payload.password = values.password;
+        }
 
         try {
             let res;

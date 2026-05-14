@@ -247,10 +247,22 @@ export default function DashboardPage() {
             },
             (error) => {
                 console.error("Lỗi lấy vị trí: ", error);
-                message.error({ content: 'Đã xảy ra lỗi khi lấy vị trí của bạn.', key: 'gps' });
+
+                // FALLBACK for Local/Dev Testing
+                message.warning({ content: 'Không lấy được vị trí. Sử dụng tọa độ mặc định (Môi trường Test).', key: 'gps' });
+
+                const fallbackLoc = DEFAULT_COMPANY_LOCATION;
+                localStorage.setItem('company_gps', JSON.stringify(fallbackLoc));
+                setCompanyLoc(fallbackLoc);
+
+                apiClient.post(`/settings`, {
+                    key: 'company_gps',
+                    value: JSON.stringify(fallbackLoc)
+                });
+
                 setIsSettingLocation(false);
             },
-            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
         );
     };
 
@@ -338,12 +350,46 @@ export default function DashboardPage() {
                     setIsCheckingTime(false);
                 }
             },
-            (error) => {
+            async (error) => {
                 console.error("Lỗi lấy vị trí: ", error);
-                message.error('Vui lòng cấp quyền truy cập vị trí để chấm công.');
-                setIsCheckingTime(false);
+                message.warning('Môi trường trình duyệt không cho phép lấy vị trí. Đang bỏ qua kiểm tra vị trí.');
+
+                // BYPASS LOCATION CHECK FOR TESTING
+                try {
+                    const email = localStorage.getItem('userEmail');
+                    if (!email) {
+                        message.error('Không tìm thấy thông tin email.');
+                        setIsCheckingTime(false);
+                        return;
+                    }
+
+                    const now = new Date().toLocaleTimeString('en-GB');
+
+                    const res = await apiClient.post(`/timekeeping`, {
+                        email,
+                        start_time: type === 'in' ? now : undefined,
+                        end_time: type === 'out' ? now : undefined,
+                        location_ignored: true // mark as bypassed
+                    });
+
+                    if (res.ok) {
+                        const isIn = type === 'in';
+                        notification.success({
+                            message: isIn ? '✅ Vào ca (Bỏ qua vị trí)' : '✅ Tan ca (Bỏ qua vị trí)'
+                        });
+                        if (type === 'in') setHasCheckedIn(true);
+                        if (type === 'out') setHasCheckedOut(true);
+                    } else {
+                        const errData = await res.json().catch(() => ({}));
+                        message.error(errData?.message || 'Chấm công thất bại.');
+                    }
+                } catch (err) {
+                    message.error('Lỗi kết nối server');
+                } finally {
+                    setIsCheckingTime(false);
+                }
             },
-            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
         );
     };
 

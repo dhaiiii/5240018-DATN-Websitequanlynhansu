@@ -172,7 +172,7 @@ export class TimekeepingService {
                     else attendanceStatus = 'Đủ giờ công';
                 } else if (record.start_time) {
                     const isLate = record.start_time > expectedStart;
-                    attendanceStatus = isLate ? 'Đi muộn (Chưa về)' : 'Đang làm việc';
+                    attendanceStatus = isLate ? 'Đi muộn' : 'Đang làm việc';
                 }
 
                 return {

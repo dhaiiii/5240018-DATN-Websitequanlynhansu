@@ -192,9 +192,17 @@ export default function DashboardLayout({
         <Layout style={{ height: '100vh', overflow: 'hidden' }}>
             <Sider trigger={null} collapsible collapsed={collapsed} theme="light">
                 <div className="h-16 flex items-center justify-center border-b border-gray-100">
-                    <h1 className={`font-bold bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent duration-200 ${collapsed ? 'text-xs' : 'text-xl'}`}>
-                        {collapsed ? 'QLNS' : 'Hệ thống QLNS'}
-                    </h1>
+                    <div className="flex items-center gap-2">
+                        {/* Company Logo MACIT */}
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#003087] to-[#0070ba] rounded-lg flex items-center justify-center shadow-sm">
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                        </div>
+                        {!collapsed && (
+                            <span className="text-xl font-bold tracking-tight text-[#003087] uppercase ml-1">MACIT</span>
+                        )}
+                    </div>
                 </div>
                 <Menu
                     theme="light"
