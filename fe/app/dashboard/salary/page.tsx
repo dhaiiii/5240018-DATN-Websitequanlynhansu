@@ -6,6 +6,7 @@ import { Table, Button, Tag, Space, message, Card, Statistic, Row, Col } from 'a
 import { apiClient } from '@/lib/api/api-client';
 import CalculatePayrollModal from '@/components/payroll/CalculatePayrollModal';
 import SalaryConfigModal from '@/components/payroll/SalaryConfigModal';
+import * as XLSX from 'xlsx';
 
 export default function SalaryPage() {
     const [isSysAdmin, setIsSysAdmin] = useState(false);
@@ -51,6 +52,55 @@ export default function SalaryPage() {
         } catch (error) {
             message.error('Cập nhật thất bại');
         }
+    };
+
+    const exportToExcel = () => {
+        if (!payrolls || payrolls.length === 0) {
+            message.warning('Không có dữ liệu bảng lương để xuất');
+            return;
+        }
+
+        const exportData = payrolls.map((record, index) => ({
+            'STT': index + 1,
+            'Nhân viên': `${record.user?.last_name} ${record.user?.first_name}`,
+            'Email': record.user?.email || '',
+            'Kỳ lương': `Tháng ${record.month}/${record.year}`,
+            'Số công thực tế': record.actual_days,
+            'Số công chuẩn': record.standard_days,
+            'Ot (Giờ)': record.ot_hours,
+            'OT (Tiền)': Number(record.ot_pay),
+            'Lương cơ bản': Number(record.base_salary),
+            'Phụ cấp': Number(record.allowance),
+            'Khấu trừ': Number(record.deductions),
+            'Tổng nhận (NET)': Number(record.net_salary),
+            'Trạng thái': record.status === 'PENDING' ? 'Chờ duyệt' : record.status === 'APPROVED' ? 'Đã duyệt' : 'Đã chi trả'
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+        // Adjust column widths roughly
+        const wscols = [
+            { wch: 5 },  // STT
+            { wch: 20 }, // Nhân viên
+            { wch: 25 }, // Email
+            { wch: 15 }, // Kỳ lương
+            { wch: 15 }, // Số công
+            { wch: 15 }, // Chuẩn
+            { wch: 10 }, // OT h
+            { wch: 15 }, // OT $
+            { wch: 15 }, // Cơ bản
+            { wch: 15 }, // Phụ cấp
+            { wch: 15 }, // Khấu trừ
+            { wch: 20 }, // NET
+            { wch: 15 }  // Trạng thái
+        ];
+        worksheet['!cols'] = wscols;
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'BangLuong');
+
+        // Note: the file name could include current month/year if filtering was implemented
+        XLSX.writeFile(workbook, `BangLuong_${new Date().getTime()}.xlsx`);
     };
 
     const adminColumns = [
@@ -141,6 +191,12 @@ export default function SalaryPage() {
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Quản lý Lương</h1>
                 <Space>
+                    <Button
+                        onClick={exportToExcel}
+                        style={{ backgroundColor: '#16a34a', color: '#fff', borderColor: '#16a34a' }}
+                    >
+                        Xuất file
+                    </Button>
                     <Button
                         type="primary"
                         onClick={() => {
