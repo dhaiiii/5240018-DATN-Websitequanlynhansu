@@ -51,4 +51,15 @@ export class CreateUserDto {
     @IsNumber()
     @IsOptional()
     roleId?: number;
+
+    @IsString()
+    @IsOptional()
+    citizen_id?: string;
+
+    @IsString()
+    @IsOptional()
+    contract_type?: string;
+
+    @IsOptional()
+    join_date?: any;
 }

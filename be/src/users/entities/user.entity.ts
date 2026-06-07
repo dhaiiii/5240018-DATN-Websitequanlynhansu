@@ -4,6 +4,8 @@ import { Role as RoleEntity } from '../../roles/entities/role.entity';
 import { Request } from '../../requests/entities/request.entity';
 import { Timekeeping } from '../../timekeeping/timekeeping.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
+import { UserDocument } from './user-document.entity';
+import { ProfileHistory } from './profile-history.entity';
 
 @Entity('users')
 export class User {
@@ -55,6 +57,15 @@ export class User {
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
     updated_at: Date;
 
+    @Column({ nullable: true })
+    citizen_id: string;
+
+    @Column({ type: 'date', nullable: true })
+    join_date: Date;
+
+    @Column({ nullable: true })
+    contract_type: string;
+
     @OneToMany(() => Request, request => request.user)
     requests: Request[];
 
@@ -63,4 +74,11 @@ export class User {
 
     @OneToMany(() => Notification, notification => notification.user)
     notifications: Notification[];
+
+    @OneToMany(() => UserDocument, document => document.user)
+    documents: UserDocument[];
+
+    @OneToMany(() => ProfileHistory, history => history.user)
+    histories: ProfileHistory[];
 }
+
