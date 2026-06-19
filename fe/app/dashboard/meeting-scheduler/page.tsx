@@ -246,7 +246,6 @@ export default function MeetingSchedulerPage() {
                                     key={org.id}
                                     size="small"
                                     style={{ backgroundColor: getAvatarColor(org.name), fontSize: 11 }}
-                                    title={`${org.name} (${org.email})`}
                                 >
                                     {getInitials(org.name)}
                                 </Avatar>

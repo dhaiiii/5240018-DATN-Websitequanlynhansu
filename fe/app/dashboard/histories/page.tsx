@@ -172,9 +172,9 @@ export default function GlobalHistoryPage() {
         }
     ];
 
-    const bulkMenu = (
-        <Menu items={[{ key: '1', label: 'Xuất Excel', icon: <DownloadOutlined /> }]} />
-    );
+    const bulkMenuProps = {
+        items: [{ key: '1', label: 'Xuất Excel', icon: <DownloadOutlined /> }]
+    };
 
     return (
         <div className="h-full flex flex-col">
@@ -222,7 +222,7 @@ export default function GlobalHistoryPage() {
                         />
                     </div>
 
-                    <Dropdown overlay={bulkMenu}>
+                    <Dropdown menu={bulkMenuProps}>
                         <Button>
                             Bulk Actions <DownOutlined />
                         </Button>

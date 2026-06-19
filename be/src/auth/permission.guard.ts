@@ -49,6 +49,9 @@ export class PermissionGuard extends JwtAuthGuard implements CanActivate {
             userLevel = Math.max(userLevel, 3);
         } else if (user.role === 'manager') {
             userLevel = Math.max(userLevel, 2);
+        } else {
+            // All valid authenticated users should have at least base 'user' level
+            userLevel = Math.max(userLevel, 1);
         }
 
         console.log('PermissionGuard - userPermission:', userPermission);

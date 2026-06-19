@@ -41,10 +41,16 @@ const SalaryConfigModal: React.FC<SalaryConfigModalProps> = ({ visible, onClose,
         try {
             const values = await form.validateFields();
             setLoading(true);
-            const res = await apiClient.post('/payrolls/config', {
+            const payload = {
                 ...values,
-                user_id: userId,
-            });
+                user_id: Number(userId),
+                base_salary: Number(values.base_salary),
+                allowances: values.allowances ? values.allowances.map((a: any) => ({
+                    ...a,
+                    amount: Number(a.amount)
+                })) : []
+            };
+            const res = await apiClient.post('/payrolls/config', payload);
 
             if (res.ok) {
                 message.success('Cấu hình lương thành công');

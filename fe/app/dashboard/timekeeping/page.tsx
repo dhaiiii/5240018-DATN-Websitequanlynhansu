@@ -24,6 +24,7 @@ interface Timekeeping {
 
 export default function TimekeepingPage() {
     const [data, setData] = useState<Timekeeping[]>([]);
+    const [summary, setSummary] = useState({ working: 0, absent: 0, leave: 0 });
     const [loading, setLoading] = useState(true);
     const [canViewAll, setCanViewAll] = useState(false);
     const [filters, setFilters] = useState({
@@ -51,10 +52,23 @@ export default function TimekeepingPage() {
         }
     }, [filters]);
 
+    const fetchSummary = useCallback(async () => {
+        try {
+            const response = await apiClient.get('/statistics/summary');
+            if (response.ok) {
+                const result = await response.json();
+                setSummary(result.attendanceToday);
+            }
+        } catch (error) {
+            console.error('Failed to fetch summary:', error);
+        }
+    }, []);
+
     useEffect(() => {
         fetchData();
+        fetchSummary();
         setCanViewAll(isAdmin() || isManager());
-    }, [fetchData]);
+    }, [fetchData, fetchSummary]);
 
     // Search debounce
     useEffect(() => {
@@ -84,19 +98,18 @@ export default function TimekeepingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="bg-white dark:bg-zinc-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-700">
                     <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-2">Hôm nay có mặt</h3>
-                    <p className="text-3xl font-bold text-green-600">{data.length}</p>
+                    <p className="text-3xl font-bold text-green-600">{summary.working}</p>
                     <p className="text-gray-500 text-sm mt-2">Dữ liệu thực tế từ hệ thống</p>
                 </div>
-                {/* Keep other cards for visual structure, though they are static now */}
                 <div className="bg-white dark:bg-zinc-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-700">
                     <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-2">Vắng</h3>
-                    <p className="text-3xl font-bold text-red-600">--</p>
-                    <p className="text-gray-500 text-sm mt-2">Chưa tính toán vắng</p>
+                    <p className="text-3xl font-bold text-red-600">{summary.absent}</p>
+                    <p className="text-gray-500 text-sm mt-2">Dữ liệu thực tế từ hệ thống</p>
                 </div>
                 <div className="bg-white dark:bg-zinc-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-700">
                     <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-2">Xin phép</h3>
-                    <p className="text-3xl font-bold text-yellow-600">--</p>
-                    <p className="text-gray-500 text-sm mt-2">Chưa tính toán xin phép</p>
+                    <p className="text-3xl font-bold text-yellow-600">{summary.leave}</p>
+                    <p className="text-gray-500 text-sm mt-2">Dữ liệu thực tế từ hệ thống</p>
                 </div>
             </div>
             <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-700 p-6">

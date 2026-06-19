@@ -154,10 +154,10 @@ export default function RequestsPage() {
             key: 'duration',
             render: (_: any, record: any) => (
                 <Space direction="vertical" size={0}>
-                    <Text size="small" type="secondary">
+                    <Text style={{ fontSize: 12 }} type="secondary">
                         {dayjs(record.start_date).format('DD/MM/YYYY HH:mm')}
                     </Text>
-                    <Text size="small" type="secondary">
+                    <Text style={{ fontSize: 12 }} type="secondary">
                         đến {dayjs(record.end_date).format('DD/MM/YYYY HH:mm')}
                     </Text>
                 </Space>

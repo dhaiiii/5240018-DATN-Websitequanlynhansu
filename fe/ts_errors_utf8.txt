@@ -1,0 +1,8 @@
+﻿app/dashboard/histories/page.tsx(225,31): error TS2322: Type '{ children: Element; overlay: Element; }' is not assignable to type 'IntrinsicAttributes & DropdownProps'.
+  Property 'overlay' does not exist on type 'IntrinsicAttributes & DropdownProps'.
+app/dashboard/meeting-scheduler/page.tsx(249,37): error TS2322: Type '{ children: string; key: number; size: "small"; style: { backgroundColor: string; fontSize: number; }; title: string; }' is not assignable to type 'IntrinsicAttributes & AvatarProps & RefAttributes<HTMLSpanElement>'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & AvatarProps & RefAttributes<HTMLSpanElement>'.
+app/dashboard/requests/page.tsx(157,27): error TS2322: Type '{ children: string; size: string; type: "secondary"; }' is not assignable to type 'IntrinsicAttributes & TextProps & RefAttributes<HTMLSpanElement>'.
+  Property 'size' does not exist on type 'IntrinsicAttributes & TextProps & RefAttributes<HTMLSpanElement>'.
+app/dashboard/requests/page.tsx(160,27): error TS2322: Type '{ children: string[]; size: string; type: "secondary"; }' is not assignable to type 'IntrinsicAttributes & TextProps & RefAttributes<HTMLSpanElement>'.
+  Property 'size' does not exist on type 'IntrinsicAttributes & TextProps & RefAttributes<HTMLSpanElement>'.

@@ -35,7 +35,7 @@ const DEFAULT_COMPANY_LOCATION = {
     latitude: 21.028511,
     longitude: 105.804817,
 };
-const MAX_DISTANCE_METERS = 100;
+const MAX_DISTANCE_METERS = 300; // Increased from 100 to 300 to account for GPS jitter indoors
 
 // Tính khoảng cách giữa 2 điểm GPS dùng công thức Haversine
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
